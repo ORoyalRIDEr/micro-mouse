@@ -3,6 +3,8 @@
         "main.h": "c",
         "stm32f0xx_hal.h": "c",
         "stm32f0xx_hal_conf.h": "c",
-        "hcsr04.h": "c"
+        "hcsr04.h": "c",
+        "stdio.h": "c",
+        "cstdio": "c"
     }
 }

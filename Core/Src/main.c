@@ -23,6 +23,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <Drivers/HCSR04.h>
+#include <Drivers/ZS040.h>
+#include <Lib/str.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,7 +38,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+#define print(x)  ZS040_print(x);
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -47,8 +49,6 @@ UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart3_tx;
 
 /* USER CODE BEGIN PV */
-unsigned char uart_rx_buf[30] = "empty";
-int rx_cnt = 0;
 volatile uint8_t move = 0;
 /* USER CODE END PV */
 
@@ -65,65 +65,15 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int strcmp(char *str1, char *str2)
+
+void bt_callback(char* str)
 {
-  int i=0;
-  while ((str1[i] != 0) && (str2[i] != 0)) {
-    if (str1[i] != str2[i])
-      return 0;
-    i++;
+  if (strcmp("light", str)) {
+    HAL_GPIO_TogglePin(GPIOC, LD3_Pin | LD4_Pin | LD5_Pin | LD6_Pin);
+    print("\ttoggle pins\n\r");
   }
-
-  if (i!=0)
-    return 1;
-  if (str1[i] == str2[i])
-    return 1;
-  else
-    return 0;
 }
-
-void process_uart(struct __UART_HandleTypeDef *huart)
-{
-  const int length_str = sizeof("You said: ");
-  static unsigned char buf[50] = "You said: ";
-  static int i = length_str;
-
-  while (huart->Instance->ISR & USART_ISR_RXNE) {
-    buf[i] = huart->Instance->RDR;
-    i++;
-  }
-
-  if (buf[i-1] == '\r') {
-    char* cmd_string = &buf[length_str];
-    if (strcmp(cmd_string, "light")) {
-      char* arg = cmd_string + sizeof("light");
-
-      if (*arg == 0)
-        HAL_GPIO_TogglePin(GPIOC, LD3_Pin | LD4_Pin | LD5_Pin | LD6_Pin);
-      else if (strcmp(arg, "on"))
-        HAL_GPIO_WritePin(GPIOC, LD3_Pin | LD4_Pin | LD5_Pin | LD6_Pin, 1);
-      else if (strcmp(arg, "off"))
-        HAL_GPIO_WritePin(GPIOC, LD3_Pin | LD4_Pin | LD5_Pin | LD6_Pin, 0);  
-    }
-    else if (strcmp(cmd_string, "move")) {
-      move = 1;
-    }
-
-    buf[i] = '\n';
-    i++;
-    buf[i] = '\r';
-    i++;
-
-    HAL_UART_Transmit(huart, buf, i, 1000);
-
-    i = length_str;
-    for (int j=i;j<sizeof(buf);j++)
-      buf[j] = 0;
-  }
-
-  //HAL_UART_Transmit_DMA(huart, buf, sizeof(i));
-
-}
+        
 /* USER CODE END 0 */
 
 /**
@@ -159,22 +109,27 @@ int main(void)
   MX_USART3_UART_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+
+  // setup engines
   __HAL_TIM_SET_PRESCALER(&htim1, SystemCoreClock / 1000000 - 1);
   __HAL_TIM_SetAutoreload(&htim1, 1500 - 1);
   HAL_TIM_Base_Start_IT(&htim1);
-  huart3.RxISR = process_uart;
 
-  unsigned char lfcr[] = "\n\r";
-  unsigned char msg[] = "\n\rWall-E ready\n\r";
-  HAL_UART_Transmit_DMA(&huart3, msg, sizeof(msg));
+  // setup uart
+  ZS040_init(&huart3, bt_callback);
 
+  // setup distance sensors
   HAL_TIM_Base_Start(&htim2);
   HCSR04_Init(&htim2);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   uint32_t distances[4];
+
+  print("\n\rWall-E ready\n\r");
+
   while (1)
   {
     /*if (move)
@@ -362,7 +317,7 @@ static void MX_USART3_UART_Init(void)
 
   /* USER CODE END USART3_Init 1 */
   huart3.Instance = USART3;
-  huart3.Init.BaudRate = 38400;
+  huart3.Init.BaudRate = 115200;
   huart3.Init.WordLength = UART_WORDLENGTH_8B;
   huart3.Init.StopBits = UART_STOPBITS_1;
   huart3.Init.Parity = UART_PARITY_NONE;
