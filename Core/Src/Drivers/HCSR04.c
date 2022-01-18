@@ -1,4 +1,5 @@
 #include <Drivers/HCSR04.h>
+#include <main.h>
 
 /****************************************************************************************************************************
  * HCRS04 Sensor Driver
@@ -30,9 +31,6 @@ uint32_t IC_Val2_BACK = 0;
 uint32_t Difference_BACK = 0;
 uint8_t Is_First_Captured_BACK = 0;  // is the first value captured ?
 uint16_t Distance_BACK  = 0;
-
-#define TRIG_PIN GPIO_PIN_8
-#define TRIG_PORT GPIOA
 
 TIM_HandleTypeDef* htim;
 
@@ -121,7 +119,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *hcsr04_timer)
 
 		else if (Is_First_Captured_RIGHT==1)   // if the first is already captured
 		{
-			IC_Val2_RIGHT = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);  // read second value
+			IC_Val2_RIGHT = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_3);  // read second value
 			__HAL_TIM_SET_COUNTER(htim, 0);  // reset the counter
 
 			if (IC_Val2_RIGHT > IC_Val1_RIGHT)
@@ -192,9 +190,9 @@ void delay (uint16_t time)
 
 void HCSR04_Measure (void)
 {
-	HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_SET);  // pull the TRIG pin HIGH
+	HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_SET);  // pull the TRIG pin HIGH
 	delay(10);  // wait for 10 us
-	HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_RESET);  // pull the TRIG pin low
+	HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_RESET);  // pull the TRIG pin low
 	// activate interrupts for all 4 channels of timer 2
 	__HAL_TIM_ENABLE_IT(htim, TIM_IT_CC1);
 	__HAL_TIM_ENABLE_IT(htim, TIM_IT_CC2);

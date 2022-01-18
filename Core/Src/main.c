@@ -341,7 +341,7 @@ static void MX_TIM2_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM2_Init 2 */
-
+  htim2.Instance->CCER |= (TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E); // enable capture compare
   /* USER CODE END TIM2_Init 2 */
 
 }
@@ -376,12 +376,6 @@ static void MX_USART3_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART3_Init 2 */
-  unsigned int trigger_char = 0x0D; // carriage return
-  CLEAR_BIT(huart3.Instance->CR1, USART_CR1_UE); // Reception must be disabled to set ADD bits
-  SET_BIT(huart3.Instance->CR2, USART_CR2_ADDM7); // Set Address detection to 7bit
-  huart3.Instance->CR2 |= trigger_char << USART_CR2_ADD_Pos;
-  SET_BIT(huart3.Instance->CR1, USART_CR1_UE); // And enable Reception again
-  SET_BIT(huart3.Instance->CR1, USART_CR1_CMIE); // Interrupt on trigger_char
   SET_BIT(huart3.Instance->CR1, USART_CR1_RXNEIE); // Interrupt on Reception
   /* USER CODE END USART3_Init 2 */
 

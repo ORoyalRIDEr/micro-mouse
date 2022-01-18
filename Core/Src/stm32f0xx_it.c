@@ -186,6 +186,30 @@ void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
 void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
+  TIM_HandleTypeDef *distance_timer = &htim2;
+  if (distance_timer->Instance->SR & TIM_FLAG_CC1) {
+    distance_timer->Channel = HAL_TIM_ACTIVE_CHANNEL_1;
+    __HAL_TIM_CLEAR_IT(distance_timer, TIM_IT_CC1);
+  }
+  else if (distance_timer->Instance->SR & TIM_FLAG_CC2) {
+    distance_timer->Channel = HAL_TIM_ACTIVE_CHANNEL_2;
+    __HAL_TIM_CLEAR_IT(distance_timer, TIM_IT_CC2);
+  }
+  else if (distance_timer->Instance->SR & TIM_FLAG_CC3) {
+    distance_timer->Channel = HAL_TIM_ACTIVE_CHANNEL_3;
+    __HAL_TIM_CLEAR_IT(distance_timer, TIM_IT_CC3);
+  }
+  else if (distance_timer->Instance->SR & TIM_FLAG_CC4) {
+    distance_timer->Channel = HAL_TIM_ACTIVE_CHANNEL_4;
+    __HAL_TIM_CLEAR_IT(distance_timer, TIM_IT_CC4);
+  }
+
+  if (distance_timer->Channel != HAL_TIM_ACTIVE_CHANNEL_CLEARED) {
+    HAL_TIM_IC_CaptureCallback(distance_timer);
+    distance_timer->Channel = HAL_TIM_ACTIVE_CHANNEL_CLEARED;
+    return;
+  }
+    
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
