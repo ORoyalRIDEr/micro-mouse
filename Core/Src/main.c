@@ -139,10 +139,10 @@ int main(void)
       move = 0;
     }*/
     HCSR04_Measure();
-    HAL_Delay(500);
+    HAL_Delay(100);
     HCSR04_Read(distances);
 
-    cprintf("Front: %i\t Left: %i\t Right: %i\n\r", distances[DIST_FRONT], distances[DIST_LEFT], distances[DIST_RIGHT]);
+    cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
