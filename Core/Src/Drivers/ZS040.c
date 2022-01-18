@@ -1,6 +1,7 @@
 #include <Drivers/ZS040.h>
 #include <Lib/str.h>
 
+
 /* globals */
 UART_HandleTypeDef* uart_dev;
 void(*reception_callback)(char*);
@@ -21,13 +22,13 @@ void ZS040_init(UART_HandleTypeDef *huart, void(*callback)(char*))
 void ZS040_print(char* str)
 {
     uint32_t len = strlen(str);
-    HAL_UART_Transmit(uart_dev, str, len, 100);
+    HAL_UART_Transmit(uart_dev, (uint8_t*)str, len, 100);
 }
 
 void ZS040_print_DMA(char* str)
 {
     uint32_t len = strlen(str);
-    HAL_UART_Transmit_DMA(uart_dev, str, len);
+    HAL_UART_Transmit_DMA(uart_dev, (uint8_t*)str, len);
 }
 
 /* 

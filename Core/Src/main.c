@@ -25,6 +25,7 @@
 #include <Drivers/HCSR04.h>
 #include <Drivers/ZS040.h>
 #include <Lib/str.h>
+#include <Lib/printf.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -140,6 +141,8 @@ int main(void)
     HCSR04_Measure();
     HAL_Delay(500);
     HCSR04_Read(distances);
+
+    cprintf("Front: %i\t Left: %i\t Right: %i\n\r", distances[DIST_FRONT], distances[DIST_LEFT], distances[DIST_RIGHT]);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
