@@ -8,6 +8,7 @@
         "cstdio": "c",
         "string.h": "c",
         "math.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "cmath": "cpp"
     }
 }

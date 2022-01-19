@@ -123,6 +123,7 @@ void forward(uint32_t times){
          i = 0;
          rotations++;
       }
+      HAL_Delay(1);
    }
 }  
 

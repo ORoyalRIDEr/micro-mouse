@@ -26,6 +26,7 @@
 #include <Drivers/ZS040.h>
 #include <Lib/str.h>
 #include <Lib/printf.h>
+#include <lre_stepper.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,7 +51,7 @@ UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart3_tx;
 
 /* USER CODE BEGIN PV */
-volatile uint8_t move = 0;
+volatile enum program {NONE, GO, TURN, DIST} program;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -73,6 +74,15 @@ void bt_callback(char* str)
     HAL_GPIO_TogglePin(GPIOC, LD3_Pin | LD4_Pin | LD5_Pin | LD6_Pin);
     print("\ttoggle pins\n\r");
   }
+  else if (strcmp("go", str))
+    program = GO;
+  else if (strcmp("turn", str))
+    program = TURN;
+  else if (strcmp("dist", str))
+    program = DIST;
+  else if (strcmp("stop", str))
+    program = NONE;
+
 }
         
 /* USER CODE END 0 */
@@ -133,16 +143,24 @@ int main(void)
 
   while (1)
   {
-    /*if (move)
-    {
-      rotate(100000);
-      move = 0;
-    }*/
-    HCSR04_Measure();
-    HAL_Delay(100);
-    HCSR04_Read(distances);
+    switch(program) {
+      case GO:
+        forward(10);
+        break;
+      case TURN:
+        rotate(10);
+        break;
+      case DIST:
+        for (uint32_t i=0; i<10; i++) {
+          HCSR04_Measure();
+          HAL_Delay(100);
+          HCSR04_Read(distances);
+          cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000);
+        }
+        program = NONE;
+        break;
+    }
 
-    cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
