@@ -23,6 +23,7 @@
 #include "stm32f0xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <Drivers/lre_stepper.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,8 +57,8 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
 extern DMA_HandleTypeDef hdma_usart3_tx;
 extern UART_HandleTypeDef huart3;
 /* USER CODE BEGIN EV */
@@ -159,28 +160,6 @@ void DMA1_Channel2_3_IRQHandler(void)
 }
 
 /**
-  * @brief This function handles TIM1 break, update, trigger and commutation interrupts.
-  */
-void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
-{
-  /* USER CODE BEGIN TIM1_BRK_UP_TRG_COM_IRQn 0 */
-
-  /* USER CODE END TIM1_BRK_UP_TRG_COM_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim1);
-  /* USER CODE BEGIN TIM1_BRK_UP_TRG_COM_IRQn 1 */
-/*  int i = 0;
-  lre_stepper_setStep_side(i, 0);
-  lre_stepper_setStep_side(7-i, 1);
-  while(1){
-    i++;
-    if (i > 7) {
-      i = 0;
-    }
-  }*/
-  /* USER CODE END TIM1_BRK_UP_TRG_COM_IRQn 1 */
-}
-
-/**
   * @brief This function handles TIM2 global interrupt.
   */
 void TIM2_IRQHandler(void)
@@ -216,6 +195,22 @@ void TIM2_IRQHandler(void)
   /* USER CODE BEGIN TIM2_IRQn 1 */
 
   /* USER CODE END TIM2_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM3 global interrupt.
+  */
+void TIM3_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM3_IRQn 0 */
+  engine_timer_callback();
+  __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);
+  return;
+  /* USER CODE END TIM3_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim3);
+  /* USER CODE BEGIN TIM3_IRQn 1 */
+
+  /* USER CODE END TIM3_IRQn 1 */
 }
 
 /**
