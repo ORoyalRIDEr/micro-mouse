@@ -4,7 +4,6 @@
 #define ENGINE_MAX   100
 
 enum stepper_side {STEP_LEFT, STEP_RIGHT};
-enum direction_t {DIR_BW=-1, DIR_STOP=0, DIR_FW=1};
 
 int16_t engine_speed[] = {0,0}; 
 
@@ -152,14 +151,14 @@ void engine_timer_callback()
          ticks[i] -= ENGINE_MAX;
 
          step[i] += 1;
-         step[i] = step[i] & 0xF;
+         step[i] = step[i] & 0b111;
          lre_stepper_setStep_side(step[i], i);
       }
       else if (ticks[i] <= -ENGINE_MAX) {
          ticks[i] += ENGINE_MAX;
 
          step[i] -= 1;
-         step[i] = step[i] & 0xF;
+         step[i] = step[i] & 0b111;
          lre_stepper_setStep_side(step[i], i);
       }
    }

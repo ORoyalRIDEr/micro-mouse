@@ -23,7 +23,7 @@
 #include "stm32f0xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <Drivers/lre_stepper.h>
+#include <ctrl_stack.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -203,7 +203,7 @@ void TIM2_IRQHandler(void)
 void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
-  engine_timer_callback();
+  ctrl_callback();
   __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);
   return;
   /* USER CODE END TIM3_IRQn 0 */

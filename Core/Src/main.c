@@ -22,11 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <Drivers/HCSR04.h>
-#include <Drivers/ZS040.h>
-#include <Lib/str.h>
-#include <Lib/printf.h>
-#include <Drivers/lre_stepper.h>
+#include <commander.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -40,7 +36,6 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define print(x)  ZS040_print(x);
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -51,8 +46,7 @@ UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart3_tx;
 
 /* USER CODE BEGIN PV */
-volatile enum program {NONE, GO, TURN, STOP, DIST} program;
-int8_t main_speed = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,27 +62,6 @@ static void MX_TIM3_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-void bt_callback(char* str)
-{
-  if (strcmp("light", str)) {
-    HAL_GPIO_TogglePin(GPIOC, LD3_Pin | LD4_Pin | LD5_Pin | LD6_Pin);
-    print("\ttoggle pins\n\r");
-  }
-  else if (strncmp("go", str, sizeof("go")-1)) {
-    program = GO;
-    main_speed = atoi(str + sizeof("go"));
-  }
-  else if (strncmp("turn", str, sizeof("turn")-1)) {
-    program = TURN;
-    main_speed = atoi(str + sizeof("turn"));
-  }
-  else if (strcmp("dist", str))
-    program = DIST;
-  else if (strcmp("stop", str))
-    program = STOP;
-
-}
         
 /* USER CODE END 0 */
 
@@ -140,35 +113,9 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint32_t distances[4];
-
-  print("\n\rWall-E ready\n\r");
-
+  commander();
   while (1)
-  {
-    switch(program) {
-      case GO:
-        forward(main_speed);
-        program = NONE;
-        break;
-      case TURN:
-        rotate(main_speed);
-        program = NONE;
-        break;
-      case DIST:
-        for (uint32_t i=0; i<10; i++) {
-          HCSR04_Measure();
-          HAL_Delay(100);
-          HCSR04_Read(distances);
-          cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000);
-        }
-        program = NONE;
-        break;
-      case STOP:
-        forward(0);
-        program = NONE;
-        break;
-    }
+  { 
 
     /* USER CODE END WHILE */
 
