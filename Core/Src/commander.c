@@ -7,7 +7,9 @@
 #include <Drivers/HCSR04.h>
 #include <Drivers/lre_stepper.h>
 
-volatile enum program {NONE, GO, TURN, STOP, DIST} program;
+#include <Ecl/state_estimator.h>
+
+volatile enum program {NONE, GO, STOP, TURN, DIST, STATE} program;
 int8_t speed_cmd = 0;
 
 void bt_callback(char* str)
@@ -23,11 +25,14 @@ void bt_callback(char* str)
         program = TURN;
         speed_cmd = atoi(str + sizeof("turn"));
     }
-    else if (strcmp("dist", str))
-        program = DIST;
     else if (strcmp("stop", str))
         program = STOP;
-
+    else if (strcmp("dist", str))
+        program = DIST;
+    else if (strcmp("state", str)) {
+        cprintf("test\n\r");
+        program = STATE;
+    }
 }
 
 void commander(void)
@@ -47,6 +52,10 @@ void commander(void)
             rotate(speed_cmd);
             program = NONE;
             break;
+        case STOP:
+            forward(0);
+            program = NONE;
+            break;
         case DIST:
             for (uint32_t i=0; i<10; i++) {
                 HCSR04_Measure();
@@ -56,10 +65,14 @@ void commander(void)
             }
             program = NONE;
             break;
-        case STOP:
-            forward(0);
+        case STATE:;
+            int32_t pos[2], V, heading[2];
+            get_state(pos, &V, heading);
+            cprintf("Position: (%i,%i)\tVelocity: %i\t Heading: (%i,%i)\n\r",
+                pos[0], pos[1], V, heading[0], heading[1]);
             program = NONE;
             break;
+        default:;
         }
     }
 }

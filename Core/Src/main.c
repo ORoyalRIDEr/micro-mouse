@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <commander.h>
+#include <ctrl_stack.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -99,8 +100,9 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-  // setup engines
+  // setup controller stack
   HAL_TIM_Base_Start_IT(&htim3);
+  htim3.Instance->ARR = (SYS_FREQ / MAIN_CTRL_FREQ) - 1;
 
   // setup uart
   ZS040_init(&huart3, bt_callback);

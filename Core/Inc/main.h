@@ -122,7 +122,7 @@ void Error_Handler(void);
 #define EngineL4_Pin GPIO_PIN_6
 #define EngineL4_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-
+#define SYS_FREQ  1000000 // Hz
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

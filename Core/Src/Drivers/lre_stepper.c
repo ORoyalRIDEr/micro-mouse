@@ -1,11 +1,13 @@
 #include "Drivers/lre_stepper.h"
 #include "main.h"
+#include <Lib/printf.h>
 
 #define ENGINE_MAX   100
 
 enum stepper_side {STEP_LEFT, STEP_RIGHT};
 
-int16_t engine_speed[] = {0,0}; 
+volatile int16_t engine_speed[] = {0,0};
+volatile int16_t odom_steps[] = {0,0};
 
 
 void lre_stepper_setStep_side(uint8_t step, enum stepper_side side){
@@ -130,8 +132,9 @@ void lre_stepper_setStep_side(uint8_t step, enum stepper_side side){
 
 void rotate(int16_t speed)
 {
-   engine_speed[0] = speed;
-   engine_speed[1] = -speed;
+   int16_t fwd_speed = (engine_speed[0] + engine_speed[1]) / 2;
+   engine_speed[0] = fwd_speed+speed;
+   engine_speed[1] = fwd_speed-speed;
 } 
 
 void forward(int16_t speed)
@@ -151,6 +154,7 @@ void engine_timer_callback()
          ticks[i] -= ENGINE_MAX;
 
          step[i] += 1;
+         odom_steps[i] += 1;
          step[i] = step[i] & 0b111;
          lre_stepper_setStep_side(step[i], i);
       }
@@ -158,8 +162,18 @@ void engine_timer_callback()
          ticks[i] += ENGINE_MAX;
 
          step[i] -= 1;
+         odom_steps[i] -= 1;
          step[i] = step[i] & 0b111;
          lre_stepper_setStep_side(step[i], i);
       }
    }
 }
+
+void get_engine_odometry(int16_t ret_steps[])
+{
+  ret_steps[0] = odom_steps[0];
+  ret_steps[1] = odom_steps[1];
+
+  odom_steps[0] = 0;
+  odom_steps[1] = 0;
+} 
