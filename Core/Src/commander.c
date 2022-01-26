@@ -9,7 +9,7 @@
 
 #include <Ecl/state_estimator.h>
 
-volatile enum program {NONE, GO, STOP, TURN, DIST, STATE} program;
+volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, PARK} program;
 int8_t speed_cmd = 0;
 
 void bt_callback(char* str)
@@ -30,8 +30,11 @@ void bt_callback(char* str)
     else if (strcmp("dist", str))
         program = DIST;
     else if (strcmp("state", str)) {
-        cprintf("test\n\r");
+        cprintf("test\n\r");    
         program = STATE;
+    }    
+    else if (strcmp("park", str)) {
+        program = PARK;    
     }
 }
 
@@ -72,6 +75,29 @@ void commander(void)
                 pos[0], pos[1], V, heading[0], heading[1]);
             program = NONE;
             break;
+        case PARK:
+            for (uint32_t i=0; i<10; i++) {
+                HCSR04_Measure();
+                HAL_Delay(100);
+                HCSR04_Read(distances);
+                // cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000); 
+            }
+            if (distances[DIST_FRONT]/1000 > 100000) // soll bis 10 cm an die Wand ranfahren, aber steht die 1x10^5 hier auch für 10 cm?
+            { 
+            forward(100);
+            program = PARK; 
+            }
+            else 
+            {
+            forward(0);
+            int32_t pos[2], V, heading[2];
+            get_state(heading);
+            cprintf("Heading: (%i,%i)\n\r", heading[0], heading[1]);
+            int32_t target_heading = heading + 180;
+            rotate(100);
+            }
+            program = NONE;
+            break;    
         default:;
         }
     }
