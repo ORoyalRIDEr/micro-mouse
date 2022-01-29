@@ -82,7 +82,7 @@ void commander(void)
             break;
         case DRIVE:
             forward(100);
-            HAL_Delay(10000);
+            HAL_Delay(20000);
             forward(0);
             program = NONE;
             break;    
@@ -93,20 +93,26 @@ void commander(void)
                 HCSR04_Read(distances);
                 // cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000); 
             }
-            if (distances[DIST_FRONT]/1000 > 100) //distances in mm
-            { 
-            forward(100);
-            HAL_Delay(1000);
-            forward(0);
-            program = PARK; 
-            }
-            else 
+            
+            while ((distances[DIST_FRONT]/1000 > 150))
             {
-            rotate(50);
-            HAL_Delay(3000);
-            rotate(0);
+                forward(100);
+                HAL_Delay(1000);
+                forward(0);
+                for (uint32_t i=0; i<10; i++) {
+                HCSR04_Measure();
+                HAL_Delay(100);
+                HCSR04_Read(distances);
+                }
+            }
+
+            if (distances[DIST_FRONT]/1000 < 150) //distances in mm
+            { 
+            rotate(100);
+            HAL_Delay(2000);
             forward(-50);
             HAL_Delay(2000);
+            forward(0);
             }
             program = NONE;
             break;    
