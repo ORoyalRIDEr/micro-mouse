@@ -109,7 +109,7 @@ void commander(void)
             if (distances[DIST_FRONT]/1000 < 200) //distances in mm
             { 
             forward(0);
-            rotate(58);
+            rotate(62);
             HAL_Delay(2000);
             forward(-50);
             HAL_Delay(2500);
