@@ -82,7 +82,7 @@ void commander(void)
             break;
         case DRIVE:
             forward(100);
-            HAL_Delay(20000);
+            HAL_Delay(11000);
             forward(0);
             program = NONE;
             break;    
@@ -108,8 +108,9 @@ void commander(void)
 
             if (distances[DIST_FRONT]/1000 < 200) //distances in mm
             { 
-            rotate(-100);
-            HAL_Delay(3000);
+            forward(0);
+            rotate(58);
+            HAL_Delay(2000);
             forward(-50);
             HAL_Delay(2500);
             forward(0);
