@@ -85,8 +85,8 @@ void commander(void)
             program = NONE;
             break;
         case DRIVE:
-            forward(100);
-            HAL_Delay(11000);
+            forward(50);
+            HAL_Delay(23000);
             forward(0);
             program = NONE;
             break;    
@@ -95,9 +95,9 @@ void commander(void)
                 HCSR04_Measure();
                 HAL_Delay(100);
                 HCSR04_Read(distances);
-                // cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000); 
+                cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000); 
             }        
-            while ((distances[DIST_FRONT]/1000 > 200))
+            while ((distances[DIST_FRONT]/1000 > 170))
             {
                 forward(10);
                 HAL_Delay(10);
@@ -116,7 +116,7 @@ void commander(void)
                 HCSR04_Read(distances);
                 }
             }
-            if (distances[DIST_FRONT]/1000 < 200) //distances in mm
+            if (distances[DIST_FRONT]/1000 < 170) //distances in mm
             { 
             forward(0);
             rotate(62);
@@ -139,15 +139,16 @@ void commander(void)
             program = NONE;
             break;    
         case FOLLOW_L:    //following left wall
-            for (uint32_t i=0; i<10; i++) {
+            for (uint32_t i=0; i<20; i++) {
                 HCSR04_Measure();
                 HAL_Delay(100);
                 HCSR04_Read(distances);
-                // cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000); 
+                cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000); 
             }
             
-            while (distances[DIST_LEFT]/1000 > 50 && distances[DIST_LEFT]/1000 < 120 && distances[DIST_FRONT]/1000 > 150 && distances[DIST_RIGHT]/1000 > 150)
+            while (distances[DIST_LEFT]/1000 > 150 && distances[DIST_LEFT]/1000 < 250 && distances[DIST_FRONT]/1000 > 200 && distances[DIST_RIGHT]/1000 > 200)
             {
+                cprintf("entering while loop\n\r");
                 forward(10);
                 HAL_Delay(10);
                 forward(20);
@@ -158,15 +159,13 @@ void commander(void)
                 HAL_Delay(10);
                 forward(50);
                 HAL_Delay(1000);
-                //forward(0);                       //Messung bei Stillstand i.d.R. präziser
-                for (uint32_t i=0; i<10; i++) {
-                HCSR04_Measure();
-                HAL_Delay(100);
-                HCSR04_Read(distances);
-                }
-            }
-            if (distances[DIST_LEFT]/1000 < 50 && distances[DIST_FRONT]/1000 > 150 && distances[DIST_RIGHT]/1000 > 150) //distances in mm
+                forward(0);                       //Messung bei Stillstand i.d.R. präziser
+                program = FOLLOW_L;
+            break;
+                        }
+            if (distances[DIST_LEFT]/1000 < 150 && distances[DIST_FRONT]/1000 > 200 && distances[DIST_RIGHT]/1000 > 200) //distances in mm
             { 
+            cprintf("distance left smaller than allowed\n\r");    
             forward(0);
             rotate(10);
             HAL_Delay(10);
@@ -185,8 +184,9 @@ void commander(void)
             program = FOLLOW_L;
             break;
             }
-            if (distances[DIST_LEFT]/1000 > 120 && distances[DIST_FRONT]/1000 > 150 && distances[DIST_RIGHT]/1000 > 150) //distances in mm
+            if (distances[DIST_LEFT]/1000 > 250 && distances[DIST_FRONT]/1000 > 200 && distances[DIST_RIGHT]/1000 > 200) //distances in mm
             { 
+            cprintf("distance left bigger than allowed\n\r");     
             forward(0);
             rotate(-10);
             rotate(-20);
@@ -194,7 +194,7 @@ void commander(void)
             HAL_Delay(500);
             
             forward(0);
-             forward(10);
+            forward(10);
             HAL_Delay(10);
             forward(20);
             HAL_Delay(10);
@@ -203,8 +203,9 @@ void commander(void)
             program = FOLLOW_L;
             break;
             }
-            if (distances[DIST_FRONT]/1000 < 150) //distances in mm
-            { 
+            if (distances[DIST_FRONT]/1000 < 200) //distances in mm
+            {
+            cprintf("distance front smaller than allowed\n\r");      
             forward(0);
             rotate(10);
             HAL_Delay(10);
@@ -222,10 +223,10 @@ void commander(void)
             program = FOLLOW_L;
             break;
             }
-            if (distances[DIST_RIGHT]/1000 < 150 && distances[DIST_FRONT]/1000 < 150)   {
+            if (distances[DIST_FRONT]/1000 < 200 && distances[DIST_RIGHT]/1000 < 200)   {
             program = PARK;
-            break;    
-            }    
+            break;
+            }      
         default:;
         }
     }
