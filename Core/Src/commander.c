@@ -9,7 +9,7 @@
 
 #include <Ecl/state_estimator.h>
 
-volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, DRIVE, PARK} program;
+volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, DRIVE, PARK, FOLLOW_L} program;
 int8_t speed_cmd = 0;
 
 void bt_callback(char* str)
@@ -40,6 +40,10 @@ void bt_callback(char* str)
     else if (strcmp("park", str)) {
         cprintf("parking\n\r");
         program = PARK;    
+    }
+    else if (strcmp("follow_l", str)) {
+        cprintf("following left wall\n\r");     
+        program = FOLLOW_L;    
     }
 }
 
@@ -92,10 +96,17 @@ void commander(void)
                 HAL_Delay(100);
                 HCSR04_Read(distances);
                 // cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000); 
-            }
-            
+            }        
             while ((distances[DIST_FRONT]/1000 > 200))
             {
+                forward(10);
+                HAL_Delay(10);
+                forward(20);
+                HAL_Delay(10);
+                forward(30);
+                HAL_Delay(10);
+                forward(40);
+                HAL_Delay(10);
                 forward(50);
                 HAL_Delay(1000);
                 //forward(0);
@@ -105,18 +116,116 @@ void commander(void)
                 HCSR04_Read(distances);
                 }
             }
-
             if (distances[DIST_FRONT]/1000 < 200) //distances in mm
             { 
             forward(0);
             rotate(62);
             HAL_Delay(2000);
+            rotate(0);
+            forward(0);
+            
+            forward(-10);
+            HAL_Delay(10);
+            forward(-20);
+            HAL_Delay(10);
+            forward(-30);
+            HAL_Delay(10);
+            forward(-40);
+            HAL_Delay(10);
             forward(-50);
             HAL_Delay(2500);
             forward(0);
             }
             program = NONE;
             break;    
+        case FOLLOW_L:    //following left wall
+            for (uint32_t i=0; i<10; i++) {
+                HCSR04_Measure();
+                HAL_Delay(100);
+                HCSR04_Read(distances);
+                // cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000); 
+            }
+            
+            while (distances[DIST_LEFT]/1000 > 50 && distances[DIST_LEFT]/1000 < 120 && distances[DIST_FRONT]/1000 > 150 && distances[DIST_RIGHT]/1000 > 150)
+            {
+                forward(10);
+                HAL_Delay(10);
+                forward(20);
+                HAL_Delay(10);
+                forward(30);
+                HAL_Delay(10);
+                forward(40);
+                HAL_Delay(10);
+                forward(50);
+                HAL_Delay(1000);
+                //forward(0);                       //Messung bei Stillstand i.d.R. präziser
+                for (uint32_t i=0; i<10; i++) {
+                HCSR04_Measure();
+                HAL_Delay(100);
+                HCSR04_Read(distances);
+                }
+            }
+            if (distances[DIST_LEFT]/1000 < 50 && distances[DIST_FRONT]/1000 > 150 && distances[DIST_RIGHT]/1000 > 150) //distances in mm
+            { 
+            forward(0);
+            rotate(10);
+            HAL_Delay(10);
+            rotate(20);
+            HAL_Delay(10);
+            rotate(30);
+            HAL_Delay(500);
+            
+            forward(0);
+            forward(10);
+            HAL_Delay(10);
+            forward(20);
+            HAL_Delay(10);
+            forward(30);
+            HAL_Delay(500);
+            program = FOLLOW_L;
+            break;
+            }
+            if (distances[DIST_LEFT]/1000 > 120 && distances[DIST_FRONT]/1000 > 150 && distances[DIST_RIGHT]/1000 > 150) //distances in mm
+            { 
+            forward(0);
+            rotate(-10);
+            rotate(-20);
+            rotate(-30);
+            HAL_Delay(500);
+            
+            forward(0);
+             forward(10);
+            HAL_Delay(10);
+            forward(20);
+            HAL_Delay(10);
+            forward(30);
+            HAL_Delay(500);
+            program = FOLLOW_L;
+            break;
+            }
+            if (distances[DIST_FRONT]/1000 < 150) //distances in mm
+            { 
+            forward(0);
+            rotate(10);
+            HAL_Delay(10);
+            rotate(20);
+            HAL_Delay(10);
+            rotate(30);
+            HAL_Delay(10);
+            rotate(40);
+            HAL_Delay(10);
+            rotate(50);
+            HAL_Delay(1500);
+            rotate(0);
+            forward(0);
+            
+            program = FOLLOW_L;
+            break;
+            }
+            if (distances[DIST_RIGHT]/1000 < 150 && distances[DIST_FRONT]/1000 < 150)   {
+            program = PARK;
+            break;    
+            }    
         default:;
         }
     }
