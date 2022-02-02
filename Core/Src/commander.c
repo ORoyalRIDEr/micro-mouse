@@ -12,20 +12,43 @@
 #include <Ecl/orientation_ctrl.h>
 
 volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, DRIVE, PARK, FOLLOW_L, ORIENT} program;
-int8_t speed_cmd = 0;
+int32_t arg_number = 0;
 
-void bt_callback(char* str)
+void bt_callback(uint8_t argc, char* argv[])
 {
-    if (strcmp("light", str)) {
+    char* str = argv[0];
+    
+    if (strcmp("tm", str)) {
+        
+        if (strcmp("ds", argv[1]))
+            program = DIST;
+        else if (strcmp("od", argv[1]))
+            program = STATE;
+    }
+    else if (strcmp("mv", str)) {
+        if (strcmp("sp", argv[1])) {
+            program = GO;
+            arg_number = atoi(argv[2]);
+        }
+        else if (strcmp("rt", argv[1])) {
+            program = TURN;
+            arg_number = atoi(argv[2]);
+        }
+        else if (strcmp("ds", argv[1])) {
+            program = DRIVE;
+            arg_number = atoi(argv[2]);
+        }
+    }
+    else if (strcmp("light", str)) {
         HAL_GPIO_TogglePin(GPIOC, LD3_Pin | LD4_Pin | LD5_Pin | LD6_Pin);
     }
-    else if (strncmp("go", str, sizeof("go")-1)) {
+    else if (strcmp("go", str)) {
         program = GO;
-        speed_cmd = atoi(str + sizeof("go"));
+        arg_number = atoi(argv[1]);
     }
-    else if (strncmp("turn", str, sizeof("turn")-1)) {
+    else if (strcmp("turn", str)) {
         program = TURN;
-        speed_cmd = atoi(str + sizeof("turn"));
+        arg_number = atoi(argv[2]);
     }
     else if (strcmp("stop", str))
         program = STOP;
@@ -49,7 +72,7 @@ void bt_callback(char* str)
     }
     else if (strncmp("orient", str, sizeof("orient")-1)) {
         program = ORIENT;
-        speed_cmd = atoi(str + sizeof("orient"));
+        arg_number = atoi(str + sizeof("orient"));
     }
 }
 
@@ -64,12 +87,12 @@ void commander(void)
         switch(program) {
         case GO:
             ctrl_set_mode(CTRL_BASE);
-            forward(speed_cmd);
+            forward(arg_number);
             program = NONE;
             break;
         case TURN:
             ctrl_set_mode(CTRL_BASE);
-            rotate(speed_cmd);
+            rotate(arg_number);
             program = NONE;
             break;
         case STOP:
@@ -78,7 +101,7 @@ void commander(void)
             program = NONE;
             break;
         case DIST:
-            for (uint32_t i=0; i<10; i++) {
+            for (uint32_t i=0; i<20; i++) {
                 HCSR04_Measure();
                 HAL_Delay(100);
                 HCSR04_Read(distances);
@@ -89,14 +112,14 @@ void commander(void)
         case STATE:;
             int32_t pos[2], V, heading[2];
             get_state(pos, &V, heading);
-            cprintf("Position: (%i,%i)\tVelocity: %i\t Heading: (%i,%i)\n\r",
-                pos[0], pos[1], V, heading[0], heading[1]);
+            cprintf("Position: (%i,%i)\n\r",
+                pos[0], pos[1]);
             program = NONE;
             break;
         case DRIVE:
             ctrl_set_mode(CTRL_BASE);
             forward(50);
-            HAL_Delay(23000);
+            HAL_Delay(19200/1000*arg_number);
             forward(0);
             program = NONE;
             break;    
@@ -244,7 +267,7 @@ void commander(void)
 
         case ORIENT:
             ctrl_set_mode(CTRL_ORIENTATION);
-            orientation_ctrl_setpoint(speed_cmd);
+            orientation_ctrl_setpoint(arg_number);
             program = NONE;
             break;
 
