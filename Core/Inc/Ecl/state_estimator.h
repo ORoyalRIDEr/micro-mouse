@@ -14,12 +14,10 @@ Notes on coordinate system:
 
 /* Get estimated position, velocity and heading of position
 @input pos: array where x and y position is stored
-@input V: pointer where the the absolute velocity in um/s is stored.
-@input heading: array where the x-axis of the rover in the
-    global coordinate system (see above) is stored. The vector
-    is normalized and multiplied by 1000
+@input V: pointer where the absolute velocity in um/s is stored.
+@input Psi: pointer where the yaw angle in 1000*radian is stored.
 */
-void get_state(int32_t pos[], int32_t* V, int32_t heading[]);
+void get_state(int32_t pos[], int32_t* V, int32_t* Psi);
 
 /* Executes an estimation step. This is called in the control
 stack */

@@ -2,6 +2,7 @@
 #include <Drivers/lre_stepper.h>
 #include <ctrl_stack.h>
 #include <Lib/printf.h>
+#include <Lib/cmath.h>
 
 // Micro meters per engine step
 #define UM_PER_ENGINE_STEP    106
@@ -9,21 +10,16 @@
 #define D_WHEELS_INV    25/2
 #define EST_FREQ   SUB_CTRL_FREQ
 
-// heading vector is scaled by 1000, so to norm squard is 1000^2
-#define HEADING_NORM_SQUARED 1000000 
-#define NORM_DESCENT_GAIN   -1/1000
-
 int32_t est_pos[] = {0, 0};
 int32_t est_V = 0;
-int32_t est_heading[] = {1000, 0};
+int32_t est_Psi = 0; // 1000 rad
 
-void get_state(int32_t pos[], int32_t* V, int32_t heading[])
+void get_state(int32_t pos[], int32_t* V, int32_t* Psi)
 {
     pos[0] = est_pos[0];
     pos[1] = est_pos[1];
     *V = est_V;
-    heading[0] = est_heading[0];
-    heading[1] = est_heading[1];
+    *Psi = est_Psi;
 }
 
 void estimator_callback()
@@ -50,24 +46,16 @@ void estimator_callback()
     
     /* calculate yaw increment and adjust heading (calculation
     is linearized to avoid trigonometrical functions) */
-    int32_t dPsi = w / EST_FREQ; // 1000
-    int32_t heading_0_prev = est_heading[0]; // (buffer)
-    est_heading[0] += dPsi*est_heading[1]  / 1000000;
-    est_heading[1] += -dPsi*heading_0_prev / 1000000;
-
-    /* normalize heading vector using gradient descent */
-    static int32_t norm = 1000;
-    int32_t norm_squared = (est_heading[0]*est_heading[0]) + (est_heading[1]*est_heading[1]);
-    int32_t norm_squared_error = HEADING_NORM_SQUARED - norm_squared;
-    norm += norm_squared_error*NORM_DESCENT_GAIN;
-    est_heading[0] = est_heading[0] * 1000 / norm;
-    est_heading[1] = est_heading[1] * 1000 / norm;
-
+    est_Psi += w / EST_FREQ; // 1000
 
     /**
      * Position Estimation
      */
+    int32_t xfe[] = {
+        cos1000(est_Psi),
+        sin1000(est_Psi),
+    };
     est_V = (v_wheels[0] + v_wheels[1]) / 2;
-    est_pos[0] += ((int32_t)est_V) * est_heading[0] / EST_FREQ / 1000;
-    est_pos[1] += ((int32_t)est_V) * est_heading[1] / EST_FREQ / 1000;
+    est_pos[0] += est_V * xfe[0] / EST_FREQ / 1000;
+    est_pos[1] += est_V * xfe[1] / EST_FREQ / 1000;
 }
