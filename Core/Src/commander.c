@@ -134,7 +134,7 @@ void commander(void)
             }        
             while ((distances[DIST_FRONT]/1000 > 170))
             {
-                forward(10);
+                /*forward(10);
                 HAL_Delay(10);
                 forward(20);
                 HAL_Delay(10);
