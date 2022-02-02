@@ -141,7 +141,7 @@ void commander(void)
                 forward(30);
                 HAL_Delay(10);
                 forward(40);
-                HAL_Delay(10);
+                HAL_Delay(10); */
                 forward(50);
                 HAL_Delay(1000);
                 //forward(0);
@@ -176,66 +176,67 @@ void commander(void)
 
         case FOLLOW_L:    //following left wall
             ctrl_set_mode(CTRL_BASE);
-            for (uint32_t i=0; i<20; i++) {
+            for (uint32_t i=0; i<10; i++) {
                 HCSR04_Measure();
                 HAL_Delay(100);
                 HCSR04_Read(distances);
                 cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000); 
             }
             
-            while (distances[DIST_LEFT]/1000 > 150 && distances[DIST_LEFT]/1000 < 250 && distances[DIST_FRONT]/1000 > 200 && distances[DIST_RIGHT]/1000 > 200)
+            while (distances[DIST_LEFT]/1000 > 100 && distances[DIST_LEFT]/1000 < 200 && distances[DIST_FRONT]/1000 > 200 && distances[DIST_RIGHT]/1000 > 200)
             {
                 cprintf("entering while loop\n\r");
-                forward(10);
+                /*forward(10);
                 HAL_Delay(10);
                 forward(20);
                 HAL_Delay(10);
                 forward(30);
                 HAL_Delay(10);
                 forward(40);
-                HAL_Delay(10);
+                HAL_Delay(10); */
                 forward(50);
                 HAL_Delay(1000);
-                forward(0);                       //Messung bei Stillstand i.d.R. präziser
+                //forward(0);                       //Messung bei Stillstand i.d.R. präziser
                 program = FOLLOW_L;
                 break;
             }
-            if (distances[DIST_LEFT]/1000 < 150 && distances[DIST_FRONT]/1000 > 200 && distances[DIST_RIGHT]/1000 > 200) //distances in mm
+            if (distances[DIST_LEFT]/1000 < 100 && distances[DIST_FRONT]/1000 > 200 && distances[DIST_RIGHT]/1000 > 200) //distances in mm
             { 
                 cprintf("distance left smaller than allowed\n\r");    
-                forward(0);
+                /*forward(0);
                 rotate(10);
                 HAL_Delay(10);
                 rotate(20);
-                HAL_Delay(10);
+                HAL_Delay(10);  */
                 rotate(30);
                 HAL_Delay(500);
                 
-                forward(0);
+                /*forward(0);
+                HAL_Delay(10);
                 forward(10);
                 HAL_Delay(10);
                 forward(20);
-                HAL_Delay(10);
-                forward(30);
+                HAL_Delay(10);  */
+                forward(50);
                 HAL_Delay(500);
                 program = FOLLOW_L;
                 break;
             }
-            if (distances[DIST_LEFT]/1000 > 250 && distances[DIST_FRONT]/1000 > 200 && distances[DIST_RIGHT]/1000 > 200) //distances in mm
+            if (distances[DIST_LEFT]/1000 > 200 && distances[DIST_FRONT]/1000 > 200 && distances[DIST_RIGHT]/1000 > 200) //distances in mm
             { 
                 cprintf("distance left bigger than allowed\n\r");     
-                forward(0);
-                rotate(-10);
-                rotate(-20);
+                //forward(0);
+                //rotate(-10);
+                //rotate(-20);
                 rotate(-30);
                 HAL_Delay(500);
                 
-                forward(0);
+                /*forward(0);
                 forward(10);
                 HAL_Delay(10);
                 forward(20);
-                HAL_Delay(10);
-                forward(30);
+                HAL_Delay(10);  */
+                forward(50);
                 HAL_Delay(500);
                 program = FOLLOW_L;
                 break;
@@ -244,17 +245,16 @@ void commander(void)
             {
                 cprintf("distance front smaller than allowed\n\r");      
                 forward(0);
-                rotate(10);
+                /*rotate(10);
                 HAL_Delay(10);
                 rotate(20);
                 HAL_Delay(10);
                 rotate(30);
                 HAL_Delay(10);
                 rotate(40);
-                HAL_Delay(10);
+                HAL_Delay(10);  */
                 rotate(50);
-                HAL_Delay(1500);
-                rotate(0);
+                HAL_Delay(1300);
                 forward(0);
             
                 program = FOLLOW_L;
