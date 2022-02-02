@@ -10,6 +10,8 @@
         "math.h": "c",
         "stdlib.h": "c",
         "cmath": "cpp",
-        "ctrl_stack.h": "c"
+        "ctrl_stack.h": "c",
+        "state_estimator.h": "c",
+        "lre_stepper.h": "c"
     }
 }

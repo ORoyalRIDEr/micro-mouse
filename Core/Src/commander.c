@@ -1,5 +1,6 @@
 #include <commander.h>
 #include <main.h>
+#include <ctrl_stack.h>
 
 #include <Lib/str.h>
 #include <Lib/printf.h>
@@ -8,8 +9,9 @@
 #include <Drivers/lre_stepper.h>
 
 #include <Ecl/state_estimator.h>
+#include <Ecl/orientation_ctrl.h>
 
-volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, DRIVE, PARK, FOLLOW_L} program;
+volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, DRIVE, PARK, FOLLOW_L, ORIENT} program;
 int8_t speed_cmd = 0;
 
 void bt_callback(char* str)
@@ -45,6 +47,10 @@ void bt_callback(char* str)
         cprintf("following left wall\n\r");     
         program = FOLLOW_L;    
     }
+    else if (strncmp("orient", str, sizeof("orient")-1)) {
+        program = ORIENT;
+        speed_cmd = atoi(str + sizeof("orient"));
+    }
 }
 
 void commander(void)
@@ -57,14 +63,17 @@ void commander(void)
     {
         switch(program) {
         case GO:
+            ctrl_set_mode(CTRL_BASE);
             forward(speed_cmd);
             program = NONE;
             break;
         case TURN:
+            ctrl_set_mode(CTRL_BASE);
             rotate(speed_cmd);
             program = NONE;
             break;
         case STOP:
+            ctrl_set_mode(CTRL_BASE);
             forward(0);
             program = NONE;
             break;
@@ -85,6 +94,7 @@ void commander(void)
             program = NONE;
             break;
         case DRIVE:
+            ctrl_set_mode(CTRL_BASE);
             forward(50);
             HAL_Delay(23000);
             forward(0);
@@ -92,6 +102,7 @@ void commander(void)
             break;    
             
         case PARK:
+            ctrl_set_mode(CTRL_BASE);
             for (uint32_t i=0; i<10; i++) {
                 HCSR04_Measure();
                 HAL_Delay(100);
@@ -141,6 +152,7 @@ void commander(void)
             break;    
 
         case FOLLOW_L:    //following left wall
+            ctrl_set_mode(CTRL_BASE);
             for (uint32_t i=0; i<20; i++) {
                 HCSR04_Measure();
                 HAL_Delay(100);
@@ -229,6 +241,13 @@ void commander(void)
                 program = PARK;
                 break;
             }      
+
+        case ORIENT:
+            ctrl_set_mode(CTRL_ORIENTATION);
+            orientation_ctrl_setpoint(speed_cmd);
+            program = NONE;
+            break;
+
         default:;
         }
     }

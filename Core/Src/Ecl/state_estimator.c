@@ -47,6 +47,7 @@ void estimator_callback()
     /* calculate yaw increment and adjust heading (calculation
     is linearized to avoid trigonometrical functions) */
     est_Psi += w / EST_FREQ; // 1000
+    est_Psi %= PI1000;
 
     /**
      * Position Estimation
