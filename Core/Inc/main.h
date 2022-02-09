@@ -42,7 +42,7 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-
+const uint8_t map_size = 15;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

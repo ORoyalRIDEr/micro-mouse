@@ -3,7 +3,7 @@
 // lookup table for cosine from 0° ... 90°
 const int32_t cos_lut[] = {1000,999,995,988,978,966,951,934,914,891,866,839,809,777,743,707,669,629,588,545,500,454,407,358,309,259,208,156,105,52,0};
 const int32_t cos_lut_length = sizeof(cos_lut)/sizeof(cos_lut[0]) - 1;
-const int32_t cos_delta_x = 90 / cos_lut_length;
+//const int32_t cos_delta_x = 90 / cos_lut_length;
 
 uint32_t PI1000 = 3142;
 
@@ -35,11 +35,11 @@ int32_t cosd1000(int32_t deg)
         return -cos1000(2*90-deg);
 
     // find argument
-    uint8_t index = deg / cos_delta_x;
-    uint8_t rest =  deg % cos_delta_x;
+    uint8_t index = deg / (90 / cos_lut_length);
+    uint8_t rest =  deg % (90 / cos_lut_length);
     int32_t lower = cos_lut[index];
     int32_t upper = cos_lut[index+1];
-    int32_t arg = lower + ((upper-lower)*rest)/cos_delta_x; // linear interpolation between lower and upper boundary
+    int32_t arg = lower + ((upper-lower)*rest)/(90 / cos_lut_length); // linear interpolation between lower and upper boundary
 
     return arg;
 }

@@ -15,7 +15,6 @@
 volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, DRIVE, PARK, FOLLOW_L, ORIENT, SAMPLE_MAP, SAMPLE_ROUTE ,MAP} program;
 int8_t speed_cmd = 0;
 int32_t arg_number = 0;
-const int8_t map_size = 15;
 
 void bt_callback(uint8_t argc, char* argv[])
 {
@@ -139,99 +138,9 @@ void commander(void)
 
         case FOLLOW_L:    //following left wall
             ctrl_set_mode(CTRL_BASE);
-<<<<<<< HEAD
-            for (uint32_t i=0; i<20; i++) {
-                HCSR04_Measure();
-                HAL_Delay(100);
-                HCSR04_Read(distances);
-                cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000); 
-            }           
-            while (distances[DIST_LEFT]/1000 > 150 && distances[DIST_LEFT]/1000 < 250 && distances[DIST_FRONT]/1000 > 200 && distances[DIST_RIGHT]/1000 > 200)
-            {
-                cprintf("entering while loop\n\r");
-                forward(10);
-                HAL_Delay(10);
-                forward(20);
-                HAL_Delay(10);
-                forward(30);
-                HAL_Delay(10);
-                forward(40);
-                HAL_Delay(10);
-                forward(50);
-                HAL_Delay(1000);
-                forward(0);                       //Messung bei Stillstand i.d.R. präziser
-                program = FOLLOW_L;
-                break;
-            }
-            if (distances[DIST_LEFT]/1000 < 150 && distances[DIST_FRONT]/1000 > 200 && distances[DIST_RIGHT]/1000 > 200) //distances in mm
-            { 
-                cprintf("distance left smaller than allowed\n\r");    
-                forward(0);
-                rotate(10);
-                HAL_Delay(10);
-                rotate(20);
-                HAL_Delay(10);
-                rotate(30);
-                HAL_Delay(500);
-                
-                forward(0);
-                forward(10);
-                HAL_Delay(10);
-                forward(20);
-                HAL_Delay(10);
-                forward(30);
-                HAL_Delay(500);
-                program = FOLLOW_L;
-                break;
-            }
-            if (distances[DIST_LEFT]/1000 > 250 && distances[DIST_FRONT]/1000 > 200 && distances[DIST_RIGHT]/1000 > 200) //distances in mm
-            { 
-                cprintf("distance left bigger than allowed\n\r");     
-                forward(0);
-                rotate(-10);
-                rotate(-20);
-                rotate(-30);
-                HAL_Delay(500);
-                
-                forward(0);
-                forward(10);
-                HAL_Delay(10);
-                forward(20);
-                HAL_Delay(10);
-                forward(30);
-                HAL_Delay(500);
-                program = FOLLOW_L;
-                break;
-            }
-            if (distances[DIST_FRONT]/1000 < 200) //distances in mm
-            {
-                cprintf("distance front smaller than allowed\n\r");      
-                forward(0);
-                rotate(10);
-                HAL_Delay(10);
-                rotate(20);
-                HAL_Delay(10);
-                rotate(30);
-                HAL_Delay(10);
-                rotate(40);
-                HAL_Delay(10);
-                rotate(50);
-                HAL_Delay(1500);
-                rotate(0);
-                forward(0);
-            
-                program = FOLLOW_L;
-                break;
-            }
-            if (distances[DIST_FRONT]/1000 < 200 && distances[DIST_RIGHT]/1000 < 200)   {
-                program = PARK;
-                break;
-            }      
-=======
             follow_left_wall();
             program = NONE;
             break;
->>>>>>> main
 
         case ORIENT:
             ctrl_set_mode(CTRL_ORIENTATION);
@@ -240,13 +149,7 @@ void commander(void)
             break;
 
         case SAMPLE_MAP: ;
-            int8_t walls[15*15] = {0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2};
-            for (int i = 0; i < map_size*map_size*2; i++) {
-                int8_t row = i % map_size;
-                int8_t column = i % map_size; 
-                map[row][column] = walls[i];
-            }
-            cprintf("Sample map initialised!");
+            sample_map(map);
             break;
 
         case SAMPLE_ROUTE: ;

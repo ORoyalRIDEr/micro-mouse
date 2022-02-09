@@ -12,6 +12,7 @@
         "cmath": "cpp",
         "ctrl_stack.h": "c",
         "state_estimator.h": "c",
-        "lre_stepper.h": "c"
+        "lre_stepper.h": "c",
+        "commander.h": "c"
     }
 }
