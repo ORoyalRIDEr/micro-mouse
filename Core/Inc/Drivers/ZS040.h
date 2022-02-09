@@ -9,7 +9,7 @@
 #include <stm32f0xx_hal.h>
 
 /* Init bluetooth device. Must be called prior to any other library call */
-void ZS040_init(UART_HandleTypeDef *huart, void(*callback)(char*));
+void ZS040_init(UART_HandleTypeDef *huart, void(*callback)(uint8_t, char**));
 
 /* Print string to bluetooth device. */
 void ZS040_print(char* str);
