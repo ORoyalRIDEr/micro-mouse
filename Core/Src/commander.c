@@ -11,8 +11,9 @@
 #include <Ecl/state_estimator.h>
 #include <Ecl/orientation_ctrl.h>
 
-volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, DRIVE, PARK, FOLLOW_L, ORIENT} program;
+volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, DRIVE, PARK, FOLLOW_L, ORIENT, SAMPLE_MAP, SAMPLE_ROUTE ,MAP} program;
 int8_t speed_cmd = 0;
+const int8_t map_size = 15;
 
 void bt_callback(char* str)
 {
@@ -51,6 +52,12 @@ void bt_callback(char* str)
         program = ORIENT;
         speed_cmd = atoi(str + sizeof("orient"));
     }
+    else if (strcmp("sample_map", str))
+        program = SAMPLE_MAP;
+    else if (strcmp("sample_route", str))
+        program = SAMPLE_ROUTE;
+    else if (strcmp("map", str))
+        program = MAP;
 }
 
 void commander(void)
@@ -58,6 +65,9 @@ void commander(void)
     uint32_t distances[4];
 
     cprintf("\n\rWall-E ready\n\r");
+
+    int map[map_size*2][map_size];
+    int route[map_size*map_size][2];
 
     while (1)
     {
@@ -67,16 +77,19 @@ void commander(void)
             forward(speed_cmd);
             program = NONE;
             break;
+
         case TURN:
             ctrl_set_mode(CTRL_BASE);
             rotate(speed_cmd);
             program = NONE;
             break;
+
         case STOP:
             ctrl_set_mode(CTRL_BASE);
             forward(0);
             program = NONE;
             break;
+
         case DIST:
             for (uint32_t i=0; i<10; i++) {
                 HCSR04_Measure();
@@ -86,6 +99,7 @@ void commander(void)
             }
             program = NONE;
             break;
+
         case STATE:;
             int32_t pos[2], V, heading[2];
             get_state(pos, &V, heading);
@@ -93,6 +107,7 @@ void commander(void)
                 pos[0], pos[1], V, heading[0], heading[1]);
             program = NONE;
             break;
+
         case DRIVE:
             ctrl_set_mode(CTRL_BASE);
             forward(50);
@@ -158,8 +173,7 @@ void commander(void)
                 HAL_Delay(100);
                 HCSR04_Read(distances);
                 cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000); 
-            }
-            
+            }           
             while (distances[DIST_LEFT]/1000 > 150 && distances[DIST_LEFT]/1000 < 250 && distances[DIST_FRONT]/1000 > 200 && distances[DIST_RIGHT]/1000 > 200)
             {
                 cprintf("entering while loop\n\r");
@@ -246,6 +260,62 @@ void commander(void)
             ctrl_set_mode(CTRL_ORIENTATION);
             orientation_ctrl_setpoint(speed_cmd);
             program = NONE;
+            break;
+
+        case SAMPLE_MAP: ;
+            int8_t walls[15*15] = {0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2};
+            for (int i = 0; i < map_size*map_size*2; i++) {
+                int8_t row = i % map_size;
+                int8_t column = i % map_size; 
+                map[row][column] = walls[i];
+            }
+            cprintf("Sample map initialised!");
+            break;
+
+        case SAMPLE_ROUTE: ;
+            const int8_t cells[7][2] = {{1,1},{1,2},{1,3},{2,3},{3,3},{3,2},{3,1}};
+
+            for (int8_t i = 0; i < 7; i++)
+            {
+                route[i][0] = cells[i][0];
+                route[i][1] = cells[i][1];
+            }
+            
+            cprintf("Sample route initialised!");
+            break;
+
+        case MAP: ;
+            int8_t location_row = 1;
+            int8_t location_column = 5;
+
+            //i = row, j = column
+            for (int8_t i = 0; i < map_size; i++) {
+                for (int8_t j = 0; j < map_size; j++){                
+                    if(i%2 == 0){
+                        if(j%map_size != map_size-1){
+                            cprintf("+");
+                        }
+                        else{
+                            cprintf("\n");
+                        }
+                        cprintf("%u", map[i][j]);
+                    }
+                    else{
+                        cprintf("%u", map[i]);
+                        if(j%map_size != map_size-1){
+                            if(i == location_row*2 && j == location_column){
+                                cprintf("X");
+                            }
+                            else{
+                                cprintf(" ");
+                            }
+                        }
+                        else{
+                            cprintf("\n");
+                    }
+                }
+                }
+            }
             break;
 
         default:;
