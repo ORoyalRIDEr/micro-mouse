@@ -1,5 +1,14 @@
 #include <programs.h>
 
+void speed_ramp(int32_t from, int32_t to, uint16_t steps)
+{
+    int32_t step_size = (to-from)/steps;
+    for (uint8_t i=0; i<steps; i++) {
+        forward(from + step_size*i);
+        HAL_Delay(10);
+    }
+}
+
 void parking()
 {
     uint32_t distances[4];
@@ -36,6 +45,10 @@ void parking()
         rotate(0);
         forward(0);
         
+        for (uint8_t i=0; i<5; i++) {
+            forward(-10*i);
+            HAL_Delay(10);
+        }
         forward(-10);
         HAL_Delay(10);
         forward(-20);

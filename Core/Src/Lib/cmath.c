@@ -19,7 +19,7 @@ int32_t rad10002deg(int32_t rad1000)
 int32_t cosd1000(int32_t deg)
 {
     const int32_t cos_delta_x = 90 / cos_lut_length;
-
+    
     // map x to 0 ... -90°
     if (deg < 0)
         deg = -deg; // cos is symmetric to y-axis
