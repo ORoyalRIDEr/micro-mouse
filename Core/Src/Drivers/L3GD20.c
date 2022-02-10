@@ -6,13 +6,26 @@
 extern SPI_HandleTypeDef hspi2;
 
 
-void L3GD20_Init (TIM_HandleTypeDef *hcsr04_timer)
+
+void L3GD20_Init (uint16_t Data)
+{
+    // Set Powermode
+    
+    // Set Bandwith
+    
+    // Set Scale
+    
+    // Set endianess
+    
+    // Set Highpassfilter
+}
+void L3GD20_IO (uint16_t Data)
 {
     //Write Config
     // set chip select
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_RESET);
     // transmit register
-    HAL_SPI_Transmit(&hspi2, (uint8_t *)&EEPROM_WREN, 1, 100);
+    HAL_SPI_Transmit(&hspi2, (uint8_t *)&DatA, 2, 100);
     //unset chip select
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);
 
