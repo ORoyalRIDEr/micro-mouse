@@ -9,28 +9,28 @@ uint32_t IC_Val1_FRONT = 0;
 uint32_t IC_Val2_FRONT = 0;
 uint32_t Difference_FRONT = 0;
 uint8_t Is_First_Captured_FRONT = 0;  // is the first value captured ?
-uint32_t Distance_FRONT  = 0;
+int32_t Distance_FRONT  = 0;
 
 // Global variables for right sensor
 uint32_t IC_Val1_RIGHT = 0;
 uint32_t IC_Val2_RIGHT = 0;
 uint32_t Difference_RIGHT = 0;
 uint8_t Is_First_Captured_RIGHT = 0;  // is the first value captured ?
-uint32_t Distance_RIGHT  = 0;
+int32_t Distance_RIGHT  = 0;
 
 // Global variables for left sensor
 uint32_t IC_Val1_LEFT = 0;
 uint32_t IC_Val2_LEFT = 0;
 uint32_t Difference_LEFT = 0;
 uint8_t Is_First_Captured_LEFT = 0;  // is the first value captured ?
-uint32_t Distance_LEFT  = 0;
+int32_t Distance_LEFT  = 0;
 
 // Global variables for back sensor
 uint32_t IC_Val1_BACK = 0;
 uint32_t IC_Val2_BACK = 0;
 uint32_t Difference_BACK = 0;
 uint8_t Is_First_Captured_BACK = 0;  // is the first value captured ?
-uint32_t Distance_BACK  = 0;
+int32_t Distance_BACK  = 0;
 
 TIM_HandleTypeDef* htim;
 uint32_t n_measurements[4]; 
@@ -195,6 +195,11 @@ void delay (uint16_t time)
 
 void HCSR04_Measure (void)
 {
+	Distance_FRONT = -1;
+	Distance_RIGHT = -1;
+	Distance_BACK = -1;
+	Distance_LEFT = -1;
+
 	HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_SET);  // pull the TRIG pin HIGH
 	delay(10);  // wait for 10 us
 	HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_RESET);  // pull the TRIG pin low
@@ -207,9 +212,9 @@ void HCSR04_Measure (void)
 
 void HCSR04_Read (uint32_t distances[])
 {
-    distances[DIST_FRONT] = Distance_FRONT;
-    distances[DIST_RIGHT] = Distance_RIGHT;
-    distances[DIST_BACK] = Distance_BACK;
-    distances[DIST_LEFT] = Distance_LEFT;
+    distances[DIST_FRONT] = (Distance_FRONT <= MAX_DIST/1000) ? Distance_FRONT : -1;
+    distances[DIST_RIGHT] = (Distance_RIGHT <= MAX_DIST/1000) ? Distance_RIGHT : -1;
+    distances[DIST_BACK] = (Distance_BACK <= MAX_DIST/1000) ? Distance_BACK : -1;
+    distances[DIST_LEFT] = (Distance_LEFT <= MAX_DIST/1000) ? Distance_LEFT : -1;
 }
 
