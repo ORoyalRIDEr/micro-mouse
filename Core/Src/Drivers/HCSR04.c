@@ -195,10 +195,10 @@ void delay (uint16_t time)
 
 void HCSR04_Measure (void)
 {
-	Distance_FRONT = -1;
-	Distance_RIGHT = -1;
-	Distance_BACK = -1;
-	Distance_LEFT = -1;
+	Distance_FRONT = 0;
+	Distance_RIGHT = 0;
+	Distance_BACK = 0;
+	Distance_LEFT = 0;
 
 	HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_SET);  // pull the TRIG pin HIGH
 	delay(10);  // wait for 10 us
@@ -210,11 +210,11 @@ void HCSR04_Measure (void)
 	__HAL_TIM_ENABLE_IT(htim, TIM_IT_CC4);
 }
 
-void HCSR04_Read (uint32_t distances[])
+void HCSR04_Read (int32_t distances[])
 {
-    distances[DIST_FRONT] = (Distance_FRONT <= MAX_DIST/1000) ? Distance_FRONT : -1;
-    distances[DIST_RIGHT] = (Distance_RIGHT <= MAX_DIST/1000) ? Distance_RIGHT : -1;
-    distances[DIST_BACK] = (Distance_BACK <= MAX_DIST/1000) ? Distance_BACK : -1;
-    distances[DIST_LEFT] = (Distance_LEFT <= MAX_DIST/1000) ? Distance_LEFT : -1;
+    distances[DIST_FRONT] = (Distance_FRONT <= MAX_DIST) ? Distance_FRONT : 0;
+    distances[DIST_RIGHT] = (Distance_RIGHT <= MAX_DIST) ? Distance_RIGHT : 0;
+    distances[DIST_BACK] = (Distance_BACK <= MAX_DIST) ? Distance_BACK : 0;
+    distances[DIST_LEFT] = (Distance_LEFT <= MAX_DIST) ? Distance_LEFT : 0;
 }
 
