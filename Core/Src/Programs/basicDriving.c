@@ -53,13 +53,13 @@ void follow_left_wall()
 {
     int32_t distances[4]; 
     uint32_t i;
-    uint32_t n = 20;
+    uint32_t n = 10;
     int32_t front[n-1];     //interim_results_front
     int32_t left[n-1];     //interim_results_left
     int32_t right[n-1];     //interim_results_right
-    uint32_t average_front;
-    uint32_t average_left; 
-    uint32_t average_right;
+    int32_t average_front;
+    int32_t average_left; 
+    int32_t average_right;
    
     do {
         uint32_t sum_front = 0;         //reset sum of interim results front 
@@ -70,7 +70,6 @@ void follow_left_wall()
         uint32_t l = n;         //Zählfaktor für Mittelwert left sensor
         uint32_t r = n;       //Zählfaktor für Mittelwert right sensor
 
-        n = 20;
         for (i=0; i<n; i++) {
             HCSR04_Measure();
             HAL_Delay(100);
@@ -91,15 +90,12 @@ void follow_left_wall()
             if (distances[DIST_FRONT]/1000 == 0) {
                 f --;
             }
-
             if (distances[DIST_LEFT]/1000 == 0) {
                 l --;
             }
-
             if (distances[DIST_RIGHT]/1000 == 0) {
                 r --;
             }
-           
         }   
             cprintf("n: %u\n\r", n);
             cprintf("f: %u\n\r", f);
@@ -110,14 +106,14 @@ void follow_left_wall()
             average_left = sum_left/l;
             average_right = sum_right/r;
 
-            cprintf("average_front: %u\n\r", average_front);
-            cprintf("average_left: %u\n\r", average_left);
-            cprintf("average_right: %u\n\r", average_right);
+            cprintf("average_front: %i\n\r", average_front);
+            cprintf("average_left: %i\n\r", average_left);
+            cprintf("average_right: %i\n\r", average_right);
         
         if (average_left > 100 && average_left < 200)
         {
             cprintf("entering while loop\n\r");
-            cprintf("Front: %i\t Left: %i\t Right: %i\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000);
+            //cprintf("Front: %i\t Left: %i\t Right: %i\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000);
             //speed_ramp
             forward(50);
             HAL_Delay(1000);
@@ -128,23 +124,34 @@ void follow_left_wall()
             cprintf("distance left smaller than allowed\n\r");
             cprintf("Front: %i\t Left: %i\t Right: %i\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000);    
             //speed_ramp
-            rotate(30);
+            rotate(15);
             HAL_Delay(500);
             //speed_ramp
             forward(50);
             HAL_Delay(500);
         }
+        
         if (average_left > 200) //distances in mm
         { 
             cprintf("distance left bigger than allowed\n\r");     
             //speed_ramp
-            rotate(-30);
+            rotate(-15);
             HAL_Delay(500);
             //speed_ramp
             forward(50);
             HAL_Delay(500);
         }
-        if (average_front < 100) //distances in mm
+        if (average_left == 0) //distances in mm
+        { 
+            cprintf("distance left bigger than allowed\n\r");     
+            //speed_ramp
+            rotate(-15);
+            HAL_Delay(500);
+            //speed_ramp
+            forward(50);
+            HAL_Delay(500);
+        }
+        if (average_front < 100 && average_front > 0 && f > n -2 ) //distances in mm
         {
             cprintf("distance front smaller than allowed\n\r");
             cprintf("Front: %i\t Left: %i\t Right: %i\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000);      
@@ -152,8 +159,8 @@ void follow_left_wall()
             //speed_ramp
             rotate(50);
             HAL_Delay(1300);
-            forward(0);
+            forward(50);
         }
-    } while (/*!*/(average_front > 100));
+    } while (/*!*/(average_front > 100 || average_front == 0));
 }
             
