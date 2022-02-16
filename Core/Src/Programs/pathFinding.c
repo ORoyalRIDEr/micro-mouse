@@ -1,36 +1,51 @@
 #include <programs.h>
 #include <main.h>
 
-uint8_t map[MAP_SIDE*2][MAP_SIDE];
+uint8_t map[MAP_SIDE*2][MAP_SIDE] = {2};
 uint8_t route[MAP_SIDE*MAP_SIDE][2];
 
-int8_t location_row = 1;
-int8_t location_column = 5;
+uint8_t location[2] = {1,5};
+uint8_t heading = 0;
+
+
+uint8_t* get_map(void){
+    return *map;
+}
+
+uint8_t* get_route(void){
+    return *route;
+}
+
+uint8_t* get_position(void){
+    return location;
+}
+
+uint8_t get_heading(void){
+    return heading;
+}
+
 
 void sample_map(void){
     for (int i = 0; i < MAP_SIDE*MAP_SIDE*2; i++) {
-        int8_t row = i % MAP_SIDE;
-        int8_t column = i % MAP_SIDE; 
+        uint8_t row = i % MAP_SIDE;
+        uint8_t column = i % MAP_SIDE; 
         map[row][column] = i%3;
     }
-    cprintf("Sample map initialised!");
 }
 
 void sample_route(void){
-    const int8_t cells[7][2] = {{1,1},{1,2},{1,3},{2,3},{3,3},{3,2},{3,1}};
+    const uint8_t cells[7][2] = {{1,1},{1,2},{1,3},{2,3},{3,3},{3,2},{3,1}};
 
-    for (int8_t i = 0; i < 7; i++){
+    for (uint8_t i = 0; i < 7; i++){
         route[i][0] = cells[i][0];
         route[i][1] = cells[i][1];
     }
-            
-    cprintf("Sample route initialised!");
 }
 
 void print_map(void){
     //i = row, j = column
-    for (int8_t i = 0; i < MAP_SIDE; i++) {
-        for (int8_t j = 0; j < MAP_SIDE; j++){                
+    for (uint8_t i = 0; i < MAP_SIDE; i++) {
+        for (uint8_t j = 0; j < MAP_SIDE; j++){                
             if(i%2 == 0){
                 if(j%MAP_SIDE != MAP_SIDE-1){
                     cprintf("+");
@@ -43,7 +58,7 @@ void print_map(void){
             else{
                 cprintf("%u", map[i]);
                 if(j%MAP_SIDE != MAP_SIDE-1){
-                    if(i == location_row*2 && j == location_column){
+                    if(i == location[0]*2 && j == location[1]){
                         cprintf("X");
                     }
                     else{

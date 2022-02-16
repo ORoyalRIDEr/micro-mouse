@@ -16,6 +16,10 @@ void follow_left_wall(void);
 
 void sample_map(void);
 void sample_route(void);
-
 void print_map(void);
+uint8_t* get_map(void);
+uint8_t* get_route(void);
+uint8_t* get_position(void);
+uint8_t get_heading(void);
+
 #endif // PROGRAMS_H

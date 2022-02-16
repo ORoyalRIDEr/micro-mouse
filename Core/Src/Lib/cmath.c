@@ -3,7 +3,6 @@
 // lookup table for cosine from 0° ... 90°
 const int32_t cos_lut[] = {1000,999,995,988,978,966,951,934,914,891,866,839,809,777,743,707,669,629,588,545,500,454,407,358,309,259,208,156,105,52,0};
 const int32_t cos_lut_length = sizeof(cos_lut)/sizeof(cos_lut[0]) - 1;
-//const int32_t cos_delta_x = 90 / cos_lut_length;
 
 uint32_t PI1000 = 3142;
 
