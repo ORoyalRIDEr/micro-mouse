@@ -59,7 +59,9 @@ void bt_callback(uint8_t argc, char* argv[])
     }
     else if (strcmp("follow_l", str)) {
         cprintf("following left wall\n\r");     
-        program = FOLLOW_L;    
+        program = FOLLOW_L; 
+        if (strcmp("mv st", str))      
+        program = STOP;              
     }
     else if (strncmp("orient", str, sizeof("orient")-1)) {
         program = ORIENT;
