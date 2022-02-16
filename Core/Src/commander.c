@@ -19,7 +19,7 @@ int32_t arg_number = 0;
 void bt_callback(uint8_t argc, char* argv[])
 {
     char* str = argv[0];
-    
+
     if (strcmp("tm", str)) {
         
         if (strcmp("ds", argv[1]))
@@ -53,7 +53,7 @@ void bt_callback(uint8_t argc, char* argv[])
     else if (strcmp("state", str)) {
         cprintf("test\n\r");    
         program = STATE;
-    }   
+    } 
     else if (strcmp("park", str)) {
         cprintf("parking\n\r");
         program = PARK;    
@@ -76,7 +76,7 @@ void bt_callback(uint8_t argc, char* argv[])
 
 void commander(void)
 {
-    uint32_t distances[4];
+    int32_t distances[4];
 
     cprintf("\n\rWall-E ready\n\r");
 
@@ -91,7 +91,7 @@ void commander(void)
 
         case TURN:
             ctrl_set_mode(CTRL_BASE);
-            rotate(arg_number);
+            rotate(arg_number);   
             program = NONE;
             break;
 
@@ -102,11 +102,11 @@ void commander(void)
             break;
 
         case DIST:
-            for (uint32_t i=0; i<20; i++) {
+            for (uint32_t i=0; i<10; i++) {
                 HCSR04_Measure();
                 HAL_Delay(100);
                 HCSR04_Read(distances);
-                cprintf("Front: %u\t Left: %u\t Right: %u\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000);
+                cprintf("Front: %i\t Left: %i\t Right: %i\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000);
             }
             program = NONE;
             break;
@@ -125,13 +125,13 @@ void commander(void)
             HAL_Delay(19200/1000*arg_number);
             forward(0);
             program = NONE;
-            break;    
-            
+            break;   
+
         case PARK:
             ctrl_set_mode(CTRL_BASE);
             parking();
-            program = NONE;
-            break;    
+            program = NONE;                       
+            break;
 
         case FOLLOW_L:    //following left wall
             ctrl_set_mode(CTRL_BASE);
@@ -139,7 +139,7 @@ void commander(void)
             program = NONE;
             break;
 
-        case ORIENT:
+         case ORIENT:
             ctrl_set_mode(CTRL_ORIENTATION);
             orientation_ctrl_setpoint(arg_number);
             program = NONE;
