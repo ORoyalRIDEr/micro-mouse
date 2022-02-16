@@ -12,7 +12,7 @@
 #include <Ecl/state_estimator.h>
 #include <Ecl/orientation_ctrl.h>
 
-volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, DRIVE, PARK, FOLLOW_L, ORIENT, SAMPLE_MAP, SAMPLE_ROUTE ,MAP} program;
+volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, DRIVE, PARK, FOLLOW_L, ORIENT, SAMPLE_MAP, SAMPLE_ROUTE, MAP} program;
 int8_t speed_cmd = 0;
 int32_t arg_number = 0;
 
@@ -80,9 +80,6 @@ void commander(void)
 
     cprintf("\n\rWall-E ready\n\r");
 
-    int map[map_size*2][map_size];
-    int route[map_size*map_size][2];
-
     while (1)
     {
         switch(program) {
@@ -149,53 +146,15 @@ void commander(void)
             break;
 
         case SAMPLE_MAP: ;
-            sample_map(map);
+            sample_map();
             break;
 
         case SAMPLE_ROUTE: ;
-            const int8_t cells[7][2] = {{1,1},{1,2},{1,3},{2,3},{3,3},{3,2},{3,1}};
-
-            for (int8_t i = 0; i < 7; i++)
-            {
-                route[i][0] = cells[i][0];
-                route[i][1] = cells[i][1];
-            }
-            
-            cprintf("Sample route initialised!");
+            sample_route();
             break;
 
         case MAP: ;
-            int8_t location_row = 1;
-            int8_t location_column = 5;
-
-            //i = row, j = column
-            for (int8_t i = 0; i < map_size; i++) {
-                for (int8_t j = 0; j < map_size; j++){                
-                    if(i%2 == 0){
-                        if(j%map_size != map_size-1){
-                            cprintf("+");
-                        }
-                        else{
-                            cprintf("\n");
-                        }
-                        cprintf("%u", map[i][j]);
-                    }
-                    else{
-                        cprintf("%u", map[i]);
-                        if(j%map_size != map_size-1){
-                            if(i == location_row*2 && j == location_column){
-                                cprintf("X");
-                            }
-                            else{
-                                cprintf(" ");
-                            }
-                        }
-                        else{
-                            cprintf("\n");
-                    }
-                }
-                }
-            }
+            print_map();
             break;
 
         default:;

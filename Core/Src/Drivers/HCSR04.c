@@ -38,6 +38,7 @@ uint32_t n_measurements[4];
 // Let's write the callback function
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *hcsr04_timer)
+
 {
 	//Sensor_LEFT
 	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)  // if the interrupt source is channel1

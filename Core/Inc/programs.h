@@ -9,9 +9,13 @@
 #include <Drivers/HCSR04.h>
 #include <Drivers/lre_stepper.h>
 
+#define MAP_SIDE 15
+
 void parking(void);
 void follow_left_wall(void);
 
-void sample_map(uint8_t map[map_size*2][map_size]);
+void sample_map(void);
+void sample_route(void);
 
+void print_map(void);
 #endif // PROGRAMS_H
