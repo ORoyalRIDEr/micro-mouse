@@ -1,15 +1,24 @@
 #include <programs.h>
 #include <main.h>
 
-uint8_t map[MAP_SIDE*2][MAP_SIDE] = {2};
+uint8_t map[MAP_SIDE*2][MAP_SIDE] = {{2}};
 uint8_t route[MAP_SIDE*MAP_SIDE][2];
 
 uint8_t location[2] = {1,5};
 uint8_t heading = 0;
 
+void read_wall(uint8_t x, uint8_t y, uint8_t* walls){
+    uint8_t cell_y = y*2;
+
+    walls[0] = map[cell_y][x];
+    walls[1] = map[cell_y+1][x+1];
+    walls[2] = map[cell_y+2][x];
+    walls[3] = map[cell_y+1][x];
+}
 
 void write_wall(uint8_t x, uint8_t y, uint8_t wall_n, uint8_t wall_e, uint8_t wall_s, uint8_t wall_w){
     uint8_t cell_y = 2*y; 
+    
     map[cell_y][x] = wall_n;
     map[cell_y+1][x+1] = wall_e;
     map[cell_y+2][x] = wall_s;

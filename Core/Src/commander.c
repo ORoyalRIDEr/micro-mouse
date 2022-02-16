@@ -187,6 +187,9 @@ void commander(void)
             break;
 
         case W_READ: ;
+            uint8_t w[4];
+            read_wall(arg_1, arg_2, w);
+            cprintf("%u %u %u %u %u %u", arg_1, arg_2, w[0], w[1], w[2],w[3]);
             break;
 
         case W_WRITE: ;
