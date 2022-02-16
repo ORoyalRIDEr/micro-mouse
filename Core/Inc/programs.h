@@ -17,6 +17,7 @@ void follow_left_wall(void);
 void sample_map(void);
 void sample_route(void);
 void print_map(void);
+void write_wall(uint8_t x, uint8_t y, uint8_t wall_n, uint8_t wall_e, uint8_t wall_s, uint8_t wall_w);
 uint8_t* get_map(void);
 uint8_t* get_route(void);
 uint8_t* get_position(void);

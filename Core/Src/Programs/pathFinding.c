@@ -8,22 +8,13 @@ uint8_t location[2] = {1,5};
 uint8_t heading = 0;
 
 
-uint8_t* get_map(void){
-    return *map;
+void write_wall(uint8_t x, uint8_t y, uint8_t wall_n, uint8_t wall_e, uint8_t wall_s, uint8_t wall_w){
+    uint8_t cell_y = 2*y; 
+    map[cell_y][x] = wall_n;
+    map[cell_y+1][x+1] = wall_e;
+    map[cell_y+2][x] = wall_s;
+    map[cell_y+1][x] = wall_w;
 }
-
-uint8_t* get_route(void){
-    return *route;
-}
-
-uint8_t* get_position(void){
-    return location;
-}
-
-uint8_t get_heading(void){
-    return heading;
-}
-
 
 void sample_map(void){
     for (int i = 0; i < MAP_SIDE*MAP_SIDE*2; i++) {
@@ -71,4 +62,20 @@ void print_map(void){
             }
         }
     }
+}
+
+uint8_t* get_map(void){
+    return *map;
+}
+
+uint8_t* get_route(void){
+    return *route;
+}
+
+uint8_t* get_position(void){
+    return location;
+}
+
+uint8_t get_heading(void){
+    return heading;
 }

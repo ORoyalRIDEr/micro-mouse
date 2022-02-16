@@ -19,6 +19,8 @@ int32_t arg_1 = 0;
 int32_t arg_2 = 0;
 int32_t arg_3 = 0;
 int32_t arg_4 = 0;
+int32_t arg_5 = 0;
+int32_t arg_6 = 0;
 void bt_callback(uint8_t argc, char* argv[])
 {
     char* str = argv[0];
@@ -188,6 +190,7 @@ void commander(void)
             break;
 
         case W_WRITE: ;
+            write_wall(arg_1,arg_2,arg_3,arg_4,arg_5,arg_6);
             break;
 
         case POSITION: ;
