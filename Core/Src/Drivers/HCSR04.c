@@ -199,6 +199,10 @@ void HCSR04_Measure (void)
 	Distance_RIGHT = 0;
 	Distance_BACK = 0;
 	Distance_LEFT = 0;
+	Is_First_Captured_LEFT = 0;
+	Is_First_Captured_RIGHT = 0;
+	Is_First_Captured_FRONT = 0;
+	Is_First_Captured_BACK = 0;
 
 	HAL_GPIO_WritePin(TRIG_GPIO_Port, TRIG_Pin, GPIO_PIN_SET);  // pull the TRIG pin HIGH
 	delay(10);  // wait for 10 us

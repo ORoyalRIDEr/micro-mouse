@@ -23,8 +23,8 @@ int32_t sens_offset[2][4] = { // FRONT, BACK, LEFT, RIGHT
     { 50000,  10000}
 };
 
-int32_t est_pos[] = {0, 0};
-int32_t est_V = 0;
+int32_t est_pos[] = {0, 0}; // um
+int32_t est_V = 0;          // um/s
 int32_t est_Psi = 0; // 1000 rad, -pi ... pi
 /* variable get -1 if distance sensor went through
    variable get +1 if distance sensor hit wall there 
@@ -45,16 +45,15 @@ void get_state(int32_t pos[], int32_t* V, int32_t* Psi)
  * @param dist Distance Measurements: FRONT, BACK, RIGHT, LEFT
  * @param maze_pos Estimated position in maze
  */
-void slam(uint32_t dist[], uint32_t maze_pos[])
+void slam(int32_t dist[], uint32_t maze_pos[])
 {
     // only apply slam if aligned to grid (that is, not while turning)
-    uint8_t psi_valid =
-        est_Psi < (-PI1000/2 + SLAM_MAX_ANGLE) ||
-        ((est_Psi > (-PI1000/4 - SLAM_MAX_ANGLE)) && (est_Psi < (-PI1000/4 + SLAM_MAX_ANGLE))) ||
-        ((est_Psi > (- SLAM_MAX_ANGLE)) && (est_Psi < (SLAM_MAX_ANGLE))) ||
-        ((est_Psi > (PI1000/4 - SLAM_MAX_ANGLE)) && (est_Psi < (PI1000/4 + SLAM_MAX_ANGLE))) ||
-        est_Psi > (PI1000/2 + SLAM_MAX_ANGLE);
-    if (!psi_valid)
+    uint8_t pos_x_aligned = ((est_Psi > (- SLAM_MAX_ANGLE)) && (est_Psi < (SLAM_MAX_ANGLE)));
+    uint8_t neg_x_aligned = (est_Psi < (-PI1000 + SLAM_MAX_ANGLE)) || (est_Psi > (PI1000 - SLAM_MAX_ANGLE));
+    uint8_t pos_y_aligned = ((est_Psi > (PI1000/2 - SLAM_MAX_ANGLE)) && (est_Psi < (PI1000/2 + SLAM_MAX_ANGLE)));
+    uint8_t neg_y_aligned = ((est_Psi > (-PI1000/2 - SLAM_MAX_ANGLE)) && (est_Psi < (-PI1000/2 + SLAM_MAX_ANGLE)));        
+
+    if (!(pos_x_aligned || neg_x_aligned || pos_y_aligned || neg_y_aligned))
         return;
 
     int32_t xfe[] = {
@@ -62,22 +61,28 @@ void slam(uint32_t dist[], uint32_t maze_pos[])
         sin1000(est_Psi),
     }; // x-body axis in global cs
 
-    // current direction of sensors
-    int32_t laser_directions[2][4];
-    laser_directions[0][DIST_FRONT] = xfe[0];
-    laser_directions[1][DIST_FRONT] = xfe[1];
-    laser_directions[0][DIST_BACK] = -xfe[0];
-    laser_directions[1][DIST_BACK] = -xfe[1];
-    laser_directions[0][DIST_LEFT] = xfe[1];
-    laser_directions[1][DIST_LEFT] = -xfe[0];
-    laser_directions[0][DIST_RIGHT] = -xfe[1];
-    laser_directions[1][DIST_RIGHT] = xfe[0];
+    // direction of laser in body frame
+    int32_t rse[2][4];
+    rse[0][DIST_FRONT] = xfe[0];
+    rse[1][DIST_FRONT] = xfe[1];
+    rse[0][DIST_BACK] = -xfe[0];
+    rse[1][DIST_BACK] = -xfe[1];
+    rse[0][DIST_LEFT] = xfe[1];
+    rse[1][DIST_LEFT] = -xfe[0];
+    rse[0][DIST_RIGHT] = -xfe[1];
+    rse[1][DIST_RIGHT] = xfe[0];
+
+    // transformation matrix f(rover) -> e(earth)
+    uint32_t Mef[2][2] = {
+        {xfe[0], -xfe[1]},
+        {xfe[1], xfe[0]}
+    };
 
     // process individual measurements
-    for (uint8_t dir=0; dir<4; dir++) {
+    for (uint8_t laser=0; laser<4; laser++) {
         // invalid or non existing measurements are marked as
         // -1 by the distance sensor driver
-        if (dist[dir] < 0)
+        if (dist[laser] < 0)
             continue;
 
         /* follow the laser direction for DIST_MAX
@@ -92,8 +97,52 @@ void slam(uint32_t dist[], uint32_t maze_pos[])
                         -> increase maze value and break loop
                     -> if not
                         -> decrease maze value
-        */          
+        */
+        enum direction {N,E,S,W} dir;
+        if (laser == DIST_FRONT) {
+            if (pos_x_aligned) dir = N;
+            else if (neg_x_aligned) dir = S;
+            else if (pos_y_aligned) dir = E;
+            else if (neg_y_aligned) dir = W;
+        }
+        else if (laser == DIST_BACK) {
+            if (pos_x_aligned) dir = S;
+            else if (neg_x_aligned) dir = N;
+            else if (pos_y_aligned) dir = W;
+            else if (neg_y_aligned) dir = E;
+        }
+        else if (laser == DIST_LEFT) {
+            if (pos_x_aligned) dir = W;
+            else if (neg_x_aligned) dir = E;
+            else if (pos_y_aligned) dir = N;
+            else if (neg_y_aligned) dir = S;
+        }
+        else { // laser == DIST_BACK
+            if (pos_x_aligned) dir = E;
+            else if (neg_x_aligned) dir = W;
+            else if (pos_y_aligned) dir = S;
+            else if (neg_y_aligned) dir = N;
+        }
 
+        /*
+         * Calculate distance to next wall
+         */
+        int32_t pse[2];
+        mat_vec_mult(pse, Mef, &(sens_offset[0][laser]), 2, 2); // convert sensor offset from local to global frame
+
+        int32_t row; // row=0->problem in x direction; row=1->y direction
+        uint16_t m = 0; // index of wall that is hit next by laser in this direction
+        if (dir == N || dir == S) {
+            m = est_pos[0] / CELL_SIZE + (dir == N ? 1 : 0);
+            row = 0;
+        }
+        else {// dir == E || W
+            m = est_pos[1] / CELL_SIZE + (dir == E ? 1 : 0);
+            row = 1;
+        }
+
+        int32_t k = (m*CELL_SIZE - est_pos[row] - pse[row]) / (rse[row][laser]);
+        cprintf("laser: %i, dir: %i, k: %i\n", laser, dir, k);
     }
 }
 
@@ -132,7 +181,7 @@ void estimator_callback()
         sin1000(est_Psi),
     };
     est_V = (v_wheels[0] + v_wheels[1]) / 2;
-    est_pos[0] += est_V * xfe[0] / EST_FREQ / 1000;
+    est_pos[0] += est_V / EST_FREQ / 1000;
     est_pos[1] += est_V * xfe[1] / EST_FREQ / 1000;
 }
 

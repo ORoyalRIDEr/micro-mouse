@@ -24,6 +24,11 @@ int32_t cos1000(int32_t rad1000);
 int32_t sin1000(int32_t rad1000);
 
 // PI * 1000
-extern uint32_t PI1000;
+extern int32_t PI1000;
+
+/* executes matrix multiplication with mat and vec;
+n_cols and n_rows must match dimension of mat and vec; 
+res contains resulting vector */
+void mat_vec_mult(int32_t* res, int32_t* mat, int32_t* vec, uint8_t n_cols, uint8_t n_rows);
 
 #endif // CMATH_H

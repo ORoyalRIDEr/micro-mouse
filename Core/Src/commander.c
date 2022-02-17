@@ -12,7 +12,7 @@
 #include <Ecl/state_estimator.h>
 #include <Ecl/orientation_ctrl.h>
 
-volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, DRIVE, PARK, FOLLOW_L, ORIENT} program;
+volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, DRIVE, PARK, FOLLOW_L, FOLLOW_CURVE, ORIENT} program;
 int32_t arg_number = 0;
 
 void bt_callback(uint8_t argc, char* argv[])
@@ -57,11 +57,13 @@ void bt_callback(uint8_t argc, char* argv[])
         cprintf("parking\n\r");
         program = PARK;    
     }
-    else if (strcmp("follow_l", str)) {
+    else if (strcmp("f_l", str)) {
         cprintf("following left wall\n\r");     
-        program = FOLLOW_L; 
-        if (strcmp("mv st", str))      
-        program = STOP;              
+        program = FOLLOW_L;                  
+    }
+    else if (strcmp("curve", str)) {
+        cprintf("following curve\n\r");     
+        program = FOLLOW_CURVE;              
     }
     else if (strncmp("orient", str, sizeof("orient")-1)) {
         program = ORIENT;
@@ -94,7 +96,7 @@ void commander(void)
             program = NONE;
             break;
         case DIST:
-            for (uint32_t i=0; i<10; i++) {
+            for (uint32_t i=0; i<1000; i++) {
                 HCSR04_Measure();
                 HAL_Delay(100);
                 HCSR04_Read(distances);
@@ -127,6 +129,12 @@ void commander(void)
         case FOLLOW_L:    //following left wall
             ctrl_set_mode(CTRL_BASE);
             follow_left_wall();
+            program = NONE;
+            break;
+
+        case FOLLOW_CURVE:    //following left wall and make curve
+            ctrl_set_mode(CTRL_BASE);
+            follow_curve();
             program = NONE;
             break;
 

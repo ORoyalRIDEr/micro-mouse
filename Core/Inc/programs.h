@@ -10,5 +10,6 @@
 
 void parking(void);
 void follow_left_wall(void);
+void follow_curve(void);
 
 #endif // PROGRAMS_H
