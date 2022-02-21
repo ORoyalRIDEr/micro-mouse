@@ -36,11 +36,11 @@ int32_t cosd1000(int32_t deg)
         return -cos1000(2*90-deg);
 
     // find argument
-    uint8_t index = deg / (90 / cos_lut_length);
-    uint8_t rest =  deg % (90 / cos_lut_length);
+    uint8_t index = deg / cos_delta_x;
+    uint8_t rest =  deg % cos_delta_x;
     int32_t lower = cos_lut[index];
     int32_t upper = cos_lut[index+1];
-    int32_t arg = lower + ((upper-lower)*rest)/(90 / cos_lut_length); // linear interpolation between lower and upper boundary
+    int32_t arg = lower + ((upper-lower)*rest)/cos_delta_x; // linear interpolation between lower and upper boundary
 
     return arg;
 }
@@ -59,3 +59,14 @@ int32_t sin1000(int32_t rad1000)
 {
     return sind1000(rad10002deg(rad1000));
 }
+
+int32_t absolute(int32_t value){
+    if (value >= 0){
+        return value;
+    }
+    else{
+        return - value;
+    }
+} 
+
+

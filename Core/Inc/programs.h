@@ -25,4 +25,9 @@ uint8_t* get_route(void);
 uint8_t* get_position(void);
 uint8_t get_heading(void);
 
+uint8_t path_to_cell(uint8_t goal_x, uint8_t goal_y);
+
+/* Returns the 1d index of the first instance of the smallest element in the array */
+uint8_t smallest_element(uint8_t a[MAP_SIDE][MAP_SIDE]);
+
 #endif // PROGRAMS_H
