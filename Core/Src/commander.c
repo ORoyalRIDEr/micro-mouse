@@ -4,6 +4,7 @@
 #include <programs.h>
 
 #include <Lib/str.h>
+#include <Lib/cmath.h>
 #include <Lib/printf.h>
 
 #include <Drivers/HCSR04.h>
@@ -12,7 +13,7 @@
 #include <Ecl/state_estimator.h>
 #include <Ecl/orientation_ctrl.h>
 
-volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, DRIVE, PARK, FOLLOW_L, FOLLOW_CURVE, ORIENT} program;
+volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, HEADING, DRIVE, PARK, FOLLOW_L, FOLLOW_CURVE, ORIENT} program;
 int32_t arg_number = 0;
 
 void bt_callback(uint8_t argc, char* argv[])
@@ -25,6 +26,8 @@ void bt_callback(uint8_t argc, char* argv[])
             program = DIST;
         else if (strcmp("od", argv[1]))
             program = STATE;
+        else if (strcmp("hd", argv[1]))
+            program = HEADING;
     }
     else if (strcmp("mv", str)) {
         if (strcmp("sp", argv[1])) {
@@ -68,12 +71,14 @@ void bt_callback(uint8_t argc, char* argv[])
     else if (strncmp("orient", str, sizeof("orient")-1)) {
         program = ORIENT;
         arg_number = atoi(str + sizeof("orient"));
+        arg_number = deg2rad1000(arg_number);
     }
 }
 
 void commander(void)
 {
     int32_t distances[4];
+    int32_t pos[2], V, heading;
 
     cprintf("\n\rWall-E ready\n\r");
 
@@ -97,7 +102,6 @@ void commander(void)
             break;
         case DIST:
             for (uint32_t i=0; i<1000; i++) {
-                HCSR04_Measure();
                 HAL_Delay(100);
                 HCSR04_Read(distances);
                 cprintf("Front: %i\t Left: %i\t Right: %i\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000);
@@ -105,10 +109,17 @@ void commander(void)
             program = NONE;
             break;
         case STATE:;
-            int32_t pos[2], V, heading[2];
-            get_state(pos, &V, heading);
+            get_state(pos, &V, &heading);
             cprintf("Position: (%i,%i)\n\r",
-                pos[0], pos[1]);
+                pos[0]/1000, pos[1]/1000);
+            program = NONE;
+            break;
+        case HEADING:;
+            for (uint32_t i=0; i<1; i++) {
+                get_state(pos, &V, &heading);
+                cprintf("Heading: %i\n\r", heading*180/PI1000/1000);
+                HAL_Delay(100);
+            }
             program = NONE;
             break;
 

@@ -23,7 +23,6 @@ void parking()
     forward(30);
 
     while (!stop) {
-        HCSR04_Measure();
         HAL_Delay(100);
         HCSR04_Read(distances);
 
@@ -49,7 +48,6 @@ void parking()
     forward(0);
 
     for (uint32_t i=0; i<10; i++) {
-        HCSR04_Measure();
         HAL_Delay(100);
         HCSR04_Read(distances);
         cprintf("Front: %i\t Left: %i\t Right: %i\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000); 
@@ -61,7 +59,6 @@ void parking()
         HAL_Delay(1000);
         //forward(0);
         for (uint32_t i=0; i<10; i++) {
-        HCSR04_Measure();
         HAL_Delay(100);
         HCSR04_Read(distances);
         }
@@ -95,7 +92,6 @@ void follow_left_wall()
     forward(50);
 
     while (!stop) {
-        HCSR04_Measure();
         HAL_Delay(10);
         HCSR04_Read(distances);
 
@@ -127,15 +123,15 @@ void follow_curve()
 {
     uint8_t stop = 0;
     int32_t distances[4];
-    const int32_t dcmd = 200000;
-    const int32_t kinv = 30000;
+    const int32_t dcmd = 150000;
+    const int32_t kinv = 15000;
     uint8_t has_turned = 0;
     uint8_t n_under_dcmd = 0;
+    int32_t speed = 30;
 
-    forward(30);
+    forward(speed);
 
     while (!stop) {
-        HCSR04_Measure();
         HAL_Delay(100);
         HCSR04_Read(distances);
 
@@ -143,7 +139,7 @@ void follow_curve()
         cprintf("d: %i, n: %i\n\r", distances[DIST_FRONT]/1000, d/1000);
 
         if (d != 0) {
-            int32_t error = dcmd - d;
+            int32_t error = (dcmd-45000) - d;
             int32_t rot_cmd = error / kinv;
             rotate(rot_cmd);
         }
@@ -159,41 +155,21 @@ void follow_curve()
         if ((pos[0] >= 600) && has_turned)
             stop = 1;
         
-        if ((distances[DIST_FRONT] <= dcmd) && (distances[DIST_FRONT] != 0)) {
-            n_under_dcmd++;
+        if ((distances[DIST_FRONT] <= (dcmd-45000)) && (distances[DIST_FRONT] != 0)) {
+            n_under_dcmd = 10;
         }
         else
             n_under_dcmd = 0;
         if ((n_under_dcmd >= 10) && (!has_turned)) {
             forward(0);
-            uint8_t this_is_really_the_corner = 1;
-            for (uint8_t i=0; i<5; i++) {
-                HCSR04_Measure();
-                HAL_Delay(10);
-                HCSR04_Read(distances);
+            
+            rotate(50);
+            HAL_Delay(1300);
+            forward(speed);
+            has_turned = 0;
 
-                if (distances[DIST_FRONT] == 0) {
-                    this_is_really_the_corner = 0;
-                    break;
-                }
-            }
-
-            // TURN
-            if (this_is_really_the_corner) {
-                rotate(50);
-                HAL_Delay(1300);
-                forward(50);
-                has_turned = 1;
-
-                extern int32_t est_pos[];
-                est_pos[0] = 0;
-            }
-            else {
-                n_under_dcmd = 0;
-                forward(50);
-                cprintf("no corner \n\r");
-                HAL_Delay(3000);
-            }
+            extern int32_t est_pos[];
+            est_pos[0] = 0;
         }
     }
 

@@ -8,7 +8,7 @@
 // Micro meters per engine step
 #define UM_PER_ENGINE_STEP    106
 // Inverse of distance of wheels in 1/m
-#define D_WHEELS_INV    25/2
+#define D_WHEELS_INV    107/10 // decrease if Wall-E thinks that it has turned more than he really did
 #define EST_FREQ   SUB_CTRL_FREQ
 
 #define GRID_SIZE   7   // chunks
@@ -25,7 +25,7 @@ int32_t sens_offset[2][4] = { // FRONT, BACK, LEFT, RIGHT
 
 int32_t est_pos[] = {0, 0}; // um
 int32_t est_V = 0;          // um/s
-int32_t est_Psi = 0; // 1000 rad, -pi ... pi
+int32_t est_Psi = 0; // 1,000,000 rad, -pi ... pi
 /* variable get -1 if distance sensor went through
    variable get +1 if distance sensor hit wall there 
    max +/- SLAM_N_MEAS */
@@ -164,24 +164,24 @@ void estimator_callback()
      *  Orientation Estimation
     **/
     /* yaw rate */
-    int32_t w_eng_odom = (v_wheels[1] - v_wheels[0]) * D_WHEELS_INV;
+    int32_t w_eng_odom = (v_wheels[0] - v_wheels[1]) * D_WHEELS_INV;
     // TODO: Fuse this with gyro data
     int32_t w = w_eng_odom; // 1000000 / s
     
-    /* calculate yaw increment and adjust heading (calculation
-    is linearized to avoid trigonometrical functions) */
-    est_Psi += w / EST_FREQ; // 1000
-    est_Psi %= PI1000;
+    /* calculate yaw increment and adjust heading */
+    est_Psi += w / EST_FREQ; // 1000000
+    est_Psi = ((est_Psi+PI1000*1000) % (2*PI1000*1000)) - PI1000*1000;
 
     /**
      * Position Estimation
      */
     int32_t xfe[] = {
-        cos1000(est_Psi),
-        sin1000(est_Psi),
+        cos1000(est_Psi/1000),
+        sin1000(est_Psi/1000),
     };
+
     est_V = (v_wheels[0] + v_wheels[1]) / 2;
-    est_pos[0] += est_V / EST_FREQ / 1000;
+    est_pos[0] += est_V * xfe[0] / EST_FREQ / 1000;
     est_pos[1] += est_V * xfe[1] / EST_FREQ / 1000;
 }
 

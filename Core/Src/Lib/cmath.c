@@ -30,10 +30,10 @@ int32_t cosd1000(int32_t deg)
 
     uint8_t sec34 = (deg >= 180);
     if (sec34)
-        return -cos1000(deg-180);
+        return -cosd1000(deg-180);
     uint8_t sec2 = (deg >= 90);
     if (sec2)
-        return -cos1000(2*90-deg);
+        return -cosd1000(2*90-deg);
 
     // find argument
     uint8_t index = deg / cos_delta_x;
@@ -67,4 +67,25 @@ void mat_vec_mult(int32_t* res, int32_t* mat, int32_t* vec, uint8_t n_cols, uint
         for (uint8_t col=0; col<n_cols; col++)
             res[row] += vec[col] * mat[row*n_cols+col];
     }
+}
+
+int32_t median(int32_t vals[], uint8_t n_vals)
+{
+    int32_t buf[n_vals], temp;
+    int8_t i, j;
+    
+    for (i=0; i<n_vals; i++)
+        buf[i] = vals[i];
+
+    for (i=0; i<n_vals-1; i++) {
+        for(j=0; j<n_vals-i-1; j++) {
+            if(buf[j]<buf[j+1]) {                                                                           
+                temp = buf[j];
+                buf[j] = buf[j+1];
+                buf[j+1] = temp;
+            }
+        }
+    }
+
+    return buf[n_vals/2];
 }
