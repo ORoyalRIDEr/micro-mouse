@@ -96,8 +96,12 @@ void Error_Handler(void);
 #define LD4_GPIO_Port GPIOC
 #define LD5_Pin GPIO_PIN_9
 #define LD5_GPIO_Port GPIOC
-#define TRIG_Pin GPIO_PIN_8
-#define TRIG_GPIO_Port GPIOA
+#define TRIG_LEFT_Pin GPIO_PIN_8
+#define TRIG_LEFT_GPIO_Port GPIOA
+#define TRIG_RIGHT_Pin GPIO_PIN_9
+#define TRIG_RIGHT_GPIO_Port GPIOA
+#define TRIG_FRONT_Pin GPIO_PIN_10
+#define TRIG_FRONT_GPIO_Port GPIOA
 #define USBF4_DM_Pin GPIO_PIN_11
 #define USBF4_DM_GPIO_Port GPIOA
 #define USBF4_DP_Pin GPIO_PIN_12

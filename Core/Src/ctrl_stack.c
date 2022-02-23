@@ -1,5 +1,6 @@
 #include <ctrl_stack.h>
 #include <Drivers/lre_stepper.h>
+#include <Drivers/HCSR04.h>
 #include <Ecl/state_estimator.h>
 #include <Ecl/orientation_ctrl.h>
 
@@ -15,6 +16,8 @@ void ctrl_callback ()
     if (main_ctrl_counter == SUB_CTRL_PRESCALER) {
         main_ctrl_counter = 0;
         /* this function is called at SUB_CTRL_FREQ */
+
+        HCSR04_Measure();
         estimator_callback();
 
         if (ctrl_mode >= CTRL_ORIENTATION)

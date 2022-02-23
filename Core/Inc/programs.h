@@ -13,6 +13,7 @@
 
 void parking(void);
 void follow_left_wall(void);
+void follow_curve(void);
 
 void sample_map(void);
 void sample_route(void);

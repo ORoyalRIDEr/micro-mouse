@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-/* Converts value in radian*1000 to degree
-(e.g. deg2rad1000(45)  =  785 = 1000*pi/4) */
-int32_t deg2rad1000(int32_t deg);
 /* Converts value in degree to value in radian*1000
 (e.g. rad10002deg(1000*pi/4 = 785)  =  45) */
+int32_t deg2rad1000(int32_t deg);
+/* Converts value in radian*1000 to degree
+(e.g. deg2rad1000(45)  =  785 = 1000*pi/4) */
 int32_t rad10002deg(int32_t rad1000);
 
 /* Returns cosine*1000 for angle in degree
@@ -25,6 +25,13 @@ int32_t sin1000(int32_t rad1000);
 /* Returns absolute value of the value */ 
 int32_t absolute(int32_t value);
 // PI * 1000
-extern uint32_t PI1000;
+extern int32_t PI1000;
+
+/* executes matrix multiplication with mat and vec;
+n_cols and n_rows must match dimension of mat and vec; 
+res contains resulting vector */
+void mat_vec_mult(int32_t* res, int32_t* mat, int32_t* vec, uint8_t n_cols, uint8_t n_rows);
+
+int32_t median(int32_t vals[], uint8_t n_vals);
 
 #endif // CMATH_H

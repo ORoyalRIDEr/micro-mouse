@@ -4,6 +4,7 @@
 #include <programs.h>
 
 #include <Lib/str.h>
+#include <Lib/cmath.h>
 #include <Lib/printf.h>
 
 #include <Drivers/HCSR04.h>
@@ -12,8 +13,7 @@
 #include <Ecl/state_estimator.h>
 #include <Ecl/orientation_ctrl.h>
 
-volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, DRIVE, PARK, FOLLOW_L, ORIENT, SAMPLE_MAP, SAMPLE_ROUTE, MAP, W_WRITE, W_READ, POSITION, HEADING} program;
-int8_t speed_cmd = 0;
+volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, HEADING, DRIVE, PARK, FOLLOW_L, FOLLOW_CURVE, ORIENT, SAMPLE_MAP, SAMPLE_ROUTE, MAP, W_WRITE, W_READ, POSITION, HEADING_2} program;
 int32_t arg_number = 0;
 int32_t arg_1 = 0;
 int32_t arg_2 = 0;
@@ -31,6 +31,8 @@ void bt_callback(uint8_t argc, char* argv[])
             program = DIST;
         else if (strcmp("od", argv[1]))
             program = STATE;
+        else if (strcmp("hd", argv[1]))
+            program = HEADING;
     }
     else if (strcmp("mv", str)) {
         if (strcmp("sp", argv[1])) {
@@ -63,13 +65,18 @@ void bt_callback(uint8_t argc, char* argv[])
         cprintf("parking\n\r");
         program = PARK;    
     }
-    else if (strcmp("follow_l", str)) {
+    else if (strcmp("f_l", str)) {
         cprintf("following left wall\n\r");     
-        program = FOLLOW_L;    
+        program = FOLLOW_L;                  
+    }
+    else if (strcmp("curve", str)) {
+        cprintf("following curve\n\r");     
+        program = FOLLOW_CURVE;              
     }
     else if (strncmp("orient", str, sizeof("orient")-1)) {
         program = ORIENT;
         arg_number = atoi(str + sizeof("orient"));
+        arg_number = deg2rad1000(arg_number);
     }
     else if (strcmp("sample_map", str))
         program = SAMPLE_MAP;
@@ -95,7 +102,7 @@ void bt_callback(uint8_t argc, char* argv[])
             program = POSITION;
         }
         else if (strcmp("hd", argv[1])) {
-            program = HEADING;
+            program = HEADING_2;
         }
     }
     
@@ -104,6 +111,7 @@ void bt_callback(uint8_t argc, char* argv[])
 void commander(void)
 {
     int32_t distances[4];
+    int32_t pos[2], V, heading;
 
     cprintf("\n\rWall-E ready\n\r");
 
@@ -129,8 +137,7 @@ void commander(void)
             break;
 
         case DIST:
-            for (uint32_t i=0; i<10; i++) {
-                HCSR04_Measure();
+            for (uint32_t i=0; i<1000; i++) {
                 HAL_Delay(100);
                 HCSR04_Read(distances);
                 cprintf("Front: %i\t Left: %i\t Right: %i\n\r", distances[DIST_FRONT]/1000, distances[DIST_LEFT]/1000, distances[DIST_RIGHT]/1000);
@@ -139,10 +146,18 @@ void commander(void)
             break;
 
         case STATE:;
-            int32_t pos[2], V, heading[2];
-            get_state(pos, &V, heading);
+            get_state(pos, &V, &heading);
             cprintf("Position: (%i,%i)\n\r",
-                pos[0], pos[1]);
+                pos[0]/1000, pos[1]/1000);
+            program = NONE;
+            break;
+
+        case HEADING:;
+            for (uint32_t i=0; i<1; i++) {
+                get_state(pos, &V, &heading);
+                cprintf("Heading: %i\n\r", heading*180/PI1000/1000);
+                HAL_Delay(100);
+            }
             program = NONE;
             break;
 
@@ -163,6 +178,12 @@ void commander(void)
         case FOLLOW_L:    //following left wall
             ctrl_set_mode(CTRL_BASE);
             follow_left_wall();
+            program = NONE;
+            break;
+
+        case FOLLOW_CURVE:    //following left wall and make curve
+            ctrl_set_mode(CTRL_BASE);
+            follow_curve();
             program = NONE;
             break;
 
@@ -201,7 +222,7 @@ void commander(void)
             cprintf("%u %u", p[0], p[1]);
             break;
 
-        case HEADING: ;
+        case HEADING_2: ;
             uint8_t h = get_heading();
             cprintf("%u", h);
             break;
