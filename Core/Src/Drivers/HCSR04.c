@@ -55,6 +55,7 @@ void HCSR04_Measure_direction (uint8_t direction)
 }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *hcsr04_timer)
+
 {
 	//Sensor_LEFT
 	if (htim->Channel & HAL_TIM_ACTIVE_CHANNEL_1)  // if the interrupt source is channel1

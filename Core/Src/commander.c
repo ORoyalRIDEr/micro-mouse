@@ -13,9 +13,14 @@
 #include <Ecl/state_estimator.h>
 #include <Ecl/orientation_ctrl.h>
 
-volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, HEADING, DRIVE, PARK, FOLLOW_L, FOLLOW_CURVE, ORIENT} program;
+volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, HEADING, DRIVE, PARK, FOLLOW_L, FOLLOW_CURVE, ORIENT, SAMPLE_MAP, SAMPLE_ROUTE, MAP, W_WRITE, W_READ, POSITION, HEADING_2} program;
 int32_t arg_number = 0;
-
+int32_t arg_1 = 0;
+int32_t arg_2 = 0;
+int32_t arg_3 = 0;
+int32_t arg_4 = 0;
+int32_t arg_5 = 0;
+int32_t arg_6 = 0;
 void bt_callback(uint8_t argc, char* argv[])
 {
     char* str = argv[0];
@@ -73,6 +78,34 @@ void bt_callback(uint8_t argc, char* argv[])
         arg_number = atoi(str + sizeof("orient"));
         arg_number = deg2rad1000(arg_number);
     }
+    else if (strcmp("sample_map", str))
+        program = SAMPLE_MAP;
+    else if (strcmp("sample_route", str))
+        program = SAMPLE_ROUTE;
+    else if (strcmp("map", str))
+        program = MAP;
+
+    else if (strcmp("mz", str)) {
+        if (strcmp("wr", argv[1])) {
+            program = GO;
+            arg_1 = atoi(argv[2]);
+            arg_2 = atoi(argv[3]);
+            arg_3 = atoi(argv[4]);
+            arg_4 = atoi(argv[5]);
+        }
+        else if (strcmp("rd", argv[1])) {
+            program = DRIVE;
+            arg_1 = atoi(argv[2]);
+            arg_2 = atoi(argv[3]);
+        }
+        else if (strcmp("ps", argv[1])) {
+            program = POSITION;
+        }
+        else if (strcmp("hd", argv[1])) {
+            program = HEADING_2;
+        }
+    }
+    
 }
 
 void commander(void)
@@ -90,16 +123,19 @@ void commander(void)
             forward(arg_number);
             program = NONE;
             break;
+
         case TURN:
             ctrl_set_mode(CTRL_BASE);
             rotate(arg_number);   
             program = NONE;
             break;
+
         case STOP:
             ctrl_set_mode(CTRL_BASE);
             forward(0);
             program = NONE;
             break;
+
         case DIST:
             for (uint32_t i=0; i<1000; i++) {
                 HAL_Delay(100);
@@ -108,12 +144,14 @@ void commander(void)
             }
             program = NONE;
             break;
+
         case STATE:;
             get_state(pos, &V, &heading);
             cprintf("Position: (%i,%i)\n\r",
                 pos[0]/1000, pos[1]/1000);
             program = NONE;
             break;
+
         case HEADING:;
             for (uint32_t i=0; i<1; i++) {
                 get_state(pos, &V, &heading);
@@ -153,8 +191,42 @@ void commander(void)
             ctrl_set_mode(CTRL_ORIENTATION);
             orientation_ctrl_setpoint(arg_number);
             program = NONE;
-            break;     
-                  
+            break;
+
+        case SAMPLE_MAP: ;
+            sample_map();
+            cprintf("Sample map initialised!");
+            break;
+
+        case SAMPLE_ROUTE: ;
+            sample_route();
+            cprintf("Sample route initialised!");
+            break;
+
+        case MAP: ;
+            print_map();
+            break;
+
+        case W_READ: ;
+            uint8_t w[4];
+            read_wall(arg_1, arg_2, w);
+            cprintf("%u %u %u %u %u %u", arg_1, arg_2, w[0], w[1], w[2],w[3]);
+            break;
+
+        case W_WRITE: ;
+            write_wall(arg_1,arg_2,arg_3,arg_4,arg_5,arg_6);
+            break;
+
+        case POSITION: ;
+            uint8_t* p = get_position();
+            cprintf("%u %u", p[0], p[1]);
+            break;
+
+        case HEADING_2: ;
+            uint8_t h = get_heading();
+            cprintf("%u", h);
+            break;
+
         default:;
         }
     }
