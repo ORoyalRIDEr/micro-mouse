@@ -23,4 +23,9 @@ void get_state(int32_t pos[], int32_t* V, int32_t* Psi);
 stack */
 void estimator_callback(void);
 
+/* Initialize internal maze */
+void init_maze(void);
+
+void print_maze(void);
+
 #endif // STATE_ESTIMATOR_H

@@ -21,6 +21,8 @@ SRCST = $(shell find $(SDIRT) -name '*.c')
 OBJ = $(patsubst %.c,%.o,$(patsubst %,$(ODIR)/%,$(subst ../,,$(SRCS))))
 OBJT = $(patsubst %.c,%.o,$(patsubst %,$(ODIRT)/%,$(SRCST)))
 
+ODIRALL = $(dir $(OBJ) $(OBJT))
+$(shell mkdir -p $(ODIRALL))
 
 $(ODIRT)/%.o:%.c
 	@$(CC) -c -o $@ $< $(CFLAGS)

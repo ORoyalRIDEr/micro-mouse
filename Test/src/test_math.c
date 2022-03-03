@@ -36,9 +36,20 @@ void test_math_vec_mult_1d()
 void test_math_vec_mult_2d()
 {
     int32_t res[3][1];
-    int32_t exp[3][1] = {{-3324}, {1466}, {1012}};
-    int32_t mat[3][2] = {{56, -78}, {-91, 11}, {12, 34}};
-    int32_t v[2][1] = {{-12}, {34}};
+    int32_t exp[3][1] = {
+        {-3324}, 
+        {1466}, 
+        {1012}
+    };
+    int32_t mat[3][2] = {
+        {56, -78}, 
+        {-91, 11}, 
+        {12, 34}
+    };
+    int32_t v[2][1] = {
+        {-12}, 
+        {34}
+    };
     mat_vec_mult(&res, mat, v, 2, 3);
     
     printf("Expected ");
@@ -67,8 +78,8 @@ void test_cos()
 
 void test_math()
 {
-    /*test_math_vec_mult_scalar();
+    test_math_vec_mult_scalar();
     test_math_vec_mult_1d();
-    test_math_vec_mult_2d();*/
+    test_math_vec_mult_2d();
     test_cos();
 }
