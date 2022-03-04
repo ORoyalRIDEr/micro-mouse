@@ -85,6 +85,9 @@ void slam(int32_t dist[])
 
     //cprintf("pos: (%i, %i)\n", est_pos[0], est_pos[1]);
 
+    // store old position to calculate change
+    uint32_t pos_old[2] = {est_pos[0], est_pos[1]};
+
     // process individual measurements
     for (uint8_t laser=0; laser<4; laser++) {
         // invalid or non existing measurements are marked as
@@ -244,6 +247,17 @@ void slam(int32_t dist[])
             }
         }
     }
+
+    /* correcting heading */
+/*    int32_t V[2] = {
+        (est_pos[0] - pos_old[0]) * EST_FREQ,
+        (est_pos[1] - pos_old[1]) * EST_FREQ,
+    };
+    int32_t vydot_loc = 
+        pos_x_aligned ? V[0] : (
+        neg_x_aligned ? -V[0]
+        )
+    ;*/
 }
 
 void estimator_callback()
@@ -270,7 +284,7 @@ void estimator_callback()
     
     /* calculate yaw increment and adjust heading */
     est_Psi += w / EST_FREQ; // 1000000
-    est_Psi = ((est_Psi+PI1000*1000) % (2*PI1000*1000)) - PI1000*1000;
+    est_Psi = ((est_Psi+PI1000*1000) % (2*PI1000*1000)) - PI1000*1000; // limit heading to -pi...pi
 
     /**
      * Position Estimation

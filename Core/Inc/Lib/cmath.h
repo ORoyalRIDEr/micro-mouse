@@ -22,6 +22,12 @@ int32_t cos1000(int32_t rad1000);
 /* Returns sine*1000 for angle in radian*1000
 (e.g. sin1000(1000*pi/2) = 1000) */
 int32_t sin1000(int32_t rad1000);
+/* Returns arctan*1000 for angles in radian*1000
+CAUTION: x and y must be smaller than 100 to avoid overflow errors
+(e.g. atan21000(-78, -95) = -2455 = -140°)) */
+int32_t atan21000(int32_t y, int32_t x);
+
+
 /* Returns absolute value of the value */ 
 int32_t absolute(int32_t value);
 // PI * 1000

@@ -60,7 +60,44 @@ int32_t sin1000(int32_t rad1000)
     return sind1000(rad10002deg(rad1000));
 }
 
-int32_t absolute(int32_t value){
+int32_t atan21000(int32_t y, int32_t x)
+{
+    if (y == 0) {
+        if (x>=0)
+            return 0;
+        else
+            return PI1000;
+    }
+    else if (x == 0) {
+        if (y>0)
+            return PI1000/2;
+        else
+            return -PI1000/2;
+    }
+    else {
+        // Source for approximation: https://web.archive.org/web/20090416044652/http://lightsoft.co.uk/PD/stu/stuchat37.html
+        int32_t res;
+        int32_t xy = x*y;
+        int8_t sign_pihalf = xy>=0 ? 1 : -1;
+
+        if (absolute(y) <= absolute(x))
+            res = (xy*100000)/(100*x*x + 28*y*y);
+        else
+            res = sign_pihalf*PI1000/2 - (xy*100000)/(100*y*y + 28*x*x);
+
+        if (x>=0) // -pi/2 ... pi/2
+            return res;
+        else {
+            if (y>=0)
+                return res + PI1000 ;
+            else
+                return res - PI1000;
+        }
+    }
+}
+
+int32_t absolute(int32_t value)
+{
     if (value >= 0){
         return value;
     }
