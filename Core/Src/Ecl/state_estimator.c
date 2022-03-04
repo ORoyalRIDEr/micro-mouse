@@ -19,15 +19,17 @@
 #define SLAM_LOC_K 1/4 // Gain which is used to correct the position with measurements
 #define SLAM_MAX_RANGE (400*1000) // um, maximum range where the range measurement is trusted
 #define SLAM_MAX_U (5*1000) // um, maximum correction based on one measurement
+#define SLAM_BROKEN_MEAS_THRESHOLD (1000*1000) // um, measurements above this value are ignored
 
-int32_t sens_offset[4][2] = { // FRONT, BACK, LEFT, RIGHT
+// offset of sensor in local frame
+int32_t sens_off_loc[4][2] = { // FRONT, BACK, LEFT, RIGHT
     { 78000, 0},
     {-10000, 0},
     { 60000, -45000},
     { 60000,  45000}
 };
 
-int32_t est_pos[] = {0, 0}; // um
+int32_t est_pos[] = {100*1000, 100*1000}; // um
 int32_t est_V = 0;          // um/s
 int32_t est_Psi = 0; // 1,000,000 rad, -pi ... pi
 /* variable get -1 if distance sensor went through
@@ -47,22 +49,21 @@ void get_state(int32_t pos[], int32_t* V, int32_t* Psi)
  * @brief Uses the distance measurements to build up map and estimate position in maze
  * 
  * @param dist Distance Measurements: FRONT, BACK, RIGHT, LEFT
- * @param maze_pos Estimated position in maze
  */
-void slam(int32_t dist[], uint32_t maze_pos[])
+void slam(int32_t dist[])
 {
     // only apply slam if aligned to grid (that is, not while turning)
-    uint8_t pos_x_aligned = ((est_Psi > (- SLAM_MAX_ANGLE)) && (est_Psi < (SLAM_MAX_ANGLE)));
-    uint8_t neg_x_aligned = (est_Psi < (-PI1000 + SLAM_MAX_ANGLE)) || (est_Psi > (PI1000 - SLAM_MAX_ANGLE));
-    uint8_t pos_y_aligned = ((est_Psi > (PI1000/2 - SLAM_MAX_ANGLE)) && (est_Psi < (PI1000/2 + SLAM_MAX_ANGLE)));
-    uint8_t neg_y_aligned = ((est_Psi > (-PI1000/2 - SLAM_MAX_ANGLE)) && (est_Psi < (-PI1000/2 + SLAM_MAX_ANGLE)));        
+    uint8_t pos_x_aligned = ((est_Psi/1000 > (- SLAM_MAX_ANGLE)) && (est_Psi/1000 < (SLAM_MAX_ANGLE)));
+    uint8_t neg_x_aligned = (est_Psi/1000 < (-PI1000 + SLAM_MAX_ANGLE)) || (est_Psi/1000 > (PI1000 - SLAM_MAX_ANGLE));
+    uint8_t pos_y_aligned = ((est_Psi/1000 > (PI1000/2 - SLAM_MAX_ANGLE)) && (est_Psi/1000 < (PI1000/2 + SLAM_MAX_ANGLE)));
+    uint8_t neg_y_aligned = ((est_Psi/1000 > (-PI1000/2 - SLAM_MAX_ANGLE)) && (est_Psi/1000 < (-PI1000/2 + SLAM_MAX_ANGLE)));        
 
     if (!(pos_x_aligned || neg_x_aligned || pos_y_aligned || neg_y_aligned))
         return;
 
     int32_t xfe[] = {
-        cos1000(est_Psi),
-        sin1000(est_Psi),
+        cos1000(est_Psi/1000),
+        sin1000(est_Psi/1000),
     }; // x-body axis in global cs
 
     // direction of laser in body frame
@@ -88,7 +89,7 @@ void slam(int32_t dist[], uint32_t maze_pos[])
     for (uint8_t laser=0; laser<4; laser++) {
         // invalid or non existing measurements are marked as
         // -1 by the distance sensor driver
-        if (dist[laser] <= 0)
+        if ((dist[laser] <= 0) || (dist[laser] >= SLAM_BROKEN_MEAS_THRESHOLD))
             continue;
 
         /* follow the laser direction for DIST_MAX
@@ -133,20 +134,23 @@ void slam(int32_t dist[], uint32_t maze_pos[])
         /*
         * Calculate distance to next wall
         */
-        int32_t pse[2];
-        mat_vec_mult(pse, (int32_t*)Mef, (sens_offset[laser]), 2, 2); // convert sensor offset from local to global frame
+        int32_t sens_off_glob[2];
+        mat_vec_mult(sens_off_glob, (int32_t*)Mef, (sens_off_loc[laser]), 2, 2); // convert sensor offset from local to global frame
         for (uint8_t i=0; i<2; i++)
-            pse[i] /= 1000; // Mef contains sin/cos * 1000; this line normalizes this
+            sens_off_glob[i] /= 1000; // Mef contains sin/cos * 1000; this line normalizes this
+
+        int32_t pos_sens_glob[2];
+        vec_add(pos_sens_glob, est_pos, sens_off_glob, 2);
         //cprintf("Offset: (%i, %i) -> (%i, %i)\n", sens_offset[laser][0], sens_offset[laser][1] ,pse[0], pse[1]); 
 
         int32_t row; // row=0->problem in x direction; row=1->y direction
         uint16_t m = 0; // index of wall that is hit next by laser in this direction
         if (dir == N || dir == S) {
-            m = est_pos[0] / CELL_SIZE + (dir == N ? 1 : 0);
+            m = pos_sens_glob[0] / CELL_SIZE + (dir == N ? 1 : 0);
             row = 0;
         }
-        else {// dir == E || W
-            m = est_pos[1] / CELL_SIZE + (dir == E ? 1 : 0);
+        else { // dir == E || W
+            m = pos_sens_glob[1] / CELL_SIZE + (dir == E ? 1 : 0);
             row = 1;
         }
 
@@ -161,7 +165,8 @@ void slam(int32_t dist[], uint32_t maze_pos[])
 
             // k: distance to next wall
             // multiplication with 1000 because rse contains sin/cos * 1000
-            int32_t k = (m*CELL_SIZE - est_pos[row] - pse[row]) * 1000 / (rse[row][laser]);
+            //cprintf("Pos: (%i,%i), Sensor: (%i,%i)\n", est_pos[0], est_pos[1], pos_sens_glob[0], pos_sens_glob[1]);
+            int32_t k = (m*CELL_SIZE - pos_sens_glob[row]) * 1000 / (rse[row][laser]);
             //cprintf("laser: %i, dir: %i, wall: %i, k: %i\n", laser, dir, m, k);
             if (k >= SLAM_MAX_RANGE)
                 break;
@@ -171,13 +176,13 @@ void slam(int32_t dist[], uint32_t maze_pos[])
             */
             int8_t* maze_loc;
             if (dir == N || dir == S)
-                maze_loc = &(maze[2*m][est_pos[1] / CELL_SIZE]);
+                maze_loc = &(maze[2*m][pos_sens_glob[1] / CELL_SIZE]);
             else  // dir == E || W
-                maze_loc = &(maze[2*est_pos[0] / CELL_SIZE+1][m]);
+                maze_loc = &(maze[2*(pos_sens_glob[0]/CELL_SIZE)+1][m]);
 
             /*cprintf("Maze location: (%i, %i)\n", 
-                ((uint32_t)maze_loc - (uint32_t)maze) / GRID_SIZE,
-                ((uint32_t)maze_loc - (uint32_t)maze) % GRID_SIZE
+                ((uint32_t)maze_loc - (uint32_t)maze) / (GRID_SIZE+1),
+                ((uint32_t)maze_loc - (uint32_t)maze) % (GRID_SIZE+1)
                 );*/
 
              // difference between calculated and true distance to next wall
@@ -185,9 +190,11 @@ void slam(int32_t dist[], uint32_t maze_pos[])
 
             if (absolute((uint32_t) *maze_loc) >= SLAM_N_MEAS) {
                 /* LOCALISATION */
+                //cprintf("LOCALISATION\n\r");
                 if (dist[laser] >= SLAM_MAX_RANGE)
                     break;
 
+                //cprintf("Dir: %i, Loc error: %i, Maze entry: %i \n\r", dir, ddist, *maze_loc);
                 if (*maze_loc >= SLAM_N_MEAS) { // there is a wall
                     continue_slam = 0;
                     // correct position with given error
@@ -195,7 +202,7 @@ void slam(int32_t dist[], uint32_t maze_pos[])
                     // limit correction input such that bad input values cannot disturb position too much
                     u = u>SLAM_MAX_U ? SLAM_MAX_U : (u<-SLAM_MAX_U ? -SLAM_MAX_U : u);
 
-                    //cprintf("Dir: %i, Loc error: %i \n", dir, ddist);
+                    //cprintf("Dir: %i, Loc error: %i \n\r", dir, ddist);
                     switch (dir)
                     {
                     case N:
@@ -220,6 +227,7 @@ void slam(int32_t dist[], uint32_t maze_pos[])
             }
             else {
                 /* MAPPING */
+                //cprintf("MAPPING\n\r");
                 if (ddist > SLAM_WALL_REC_THRESHOLD) { // there is no wall
                     (*maze_loc)--;
                     continue_slam = 1;
@@ -230,6 +238,7 @@ void slam(int32_t dist[], uint32_t maze_pos[])
                 }
                 else { // measurement is smaller than expected; this case does not make sense so it is not treated
                     continue_slam = 0;
+                    //cprintf("\tDiscard\n\r");
                 }
                 //cprintf("Mapping (Maze loc: %i), delta dist: %i, dir: %i\n", *maze_loc, ddist, dir);
             }
@@ -303,14 +312,18 @@ void print_maze() {
                     continue; // only uneven lines use whole space
                 if (maze_val >= 10)
                     cprintf("---");
-                else
+                else if (maze_val <= -10)
                     cprintf("   ");
+                else
+                    cprintf(" ? ");
             }
             else {
                 if (maze_val >= 10)
                     cprintf("|");
-                else
+                else if (maze_val <= -10)
                     cprintf(" ");
+                else
+                    cprintf("?");
 
                 if ((2*chunk[0]+1==x) && (chunk[1]==y))
                     cprintf(" x ");
@@ -318,6 +331,15 @@ void print_maze() {
                     cprintf("   ");
             }
         }
-        cprintf("\n");
+        cprintf("\n\r");
     }
+
+    for (int8_t x=2*GRID_SIZE; x>= 0; x--) {
+        for (uint8_t y=0; y<= GRID_SIZE; y++) {
+            int8_t maze_val = maze[x][y];
+            cprintf("%i ", maze_val);
+        }
+        cprintf("\n\r");
+    }
+            
 }

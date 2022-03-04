@@ -69,13 +69,19 @@ int32_t absolute(int32_t value){
     }
 } 
 
-
 void mat_vec_mult(int32_t* res, int32_t* mat, int32_t* vec, uint8_t n_cols, uint8_t n_rows)
 {
     for (uint8_t row=0; row<n_rows; row++) {
         res[row] = 0;
         for (uint8_t col=0; col<n_cols; col++)
             res[row] += vec[col] * mat[row*n_cols+col];
+    }
+}
+
+void vec_add(int32_t* res, int32_t* v1, int32_t* v2, uint8_t n_rows)
+{
+    for (uint8_t row=0; row<n_rows; row++) {
+        res[row] = v1[row] + v2[row];
     }
 }
 

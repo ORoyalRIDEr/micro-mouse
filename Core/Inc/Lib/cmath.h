@@ -32,6 +32,9 @@ n_cols and n_rows must match dimension of mat and vec;
 res contains resulting vector */
 void mat_vec_mult(int32_t* res, int32_t* mat, int32_t* vec, uint8_t n_cols, uint8_t n_rows);
 
+/* adds two vectors together */
+void vec_add(int32_t* res, int32_t* v1, int32_t* v2, uint8_t n_rows);
+
 int32_t median(int32_t vals[], uint8_t n_vals);
 
 #endif // CMATH_H

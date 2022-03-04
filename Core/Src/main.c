@@ -26,6 +26,7 @@
 #include <ctrl_stack.h>
 #include <Drivers/HCSR04.h>
 #include <Drivers/ZS040.h>
+#include <Ecl/state_estimator.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -111,6 +112,9 @@ int main(void)
   // setup distance sensors
   HAL_TIM_Base_Start(&htim2);
   HCSR04_Init(&htim2);
+
+  // setup slam
+  init_maze();
 
   /* USER CODE END 2 */
 

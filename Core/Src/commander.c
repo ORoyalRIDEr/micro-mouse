@@ -51,6 +51,12 @@ void bt_callback(uint8_t argc, char* argv[])
             arg_number = atoi(argv[2]);
         }
     }
+    else if (strcmp("ctrl", str)) {
+        if (strcmp("slam", argv[1])) {
+            ctrl_set_mode(EST_SLAM);
+            cprintf("\tTurn on slam estimator\n\r");
+        }
+    }
     else if (strcmp("light", str)) {
         HAL_GPIO_TogglePin(GPIOC, LD3_Pin | LD4_Pin | LD5_Pin | LD6_Pin);
     }
@@ -119,19 +125,17 @@ void commander(void)
     {
         switch(program) {
         case GO:
-            ctrl_set_mode(CTRL_BASE);
             forward(arg_number);
             program = NONE;
             break;
 
         case TURN:
-            ctrl_set_mode(CTRL_BASE);
             rotate(arg_number);   
             program = NONE;
             break;
 
         case STOP:
-            ctrl_set_mode(CTRL_BASE);
+            ctrl_unset_mode(CTRL_EST_ALL);
             forward(0);
             program = NONE;
             break;
@@ -162,7 +166,6 @@ void commander(void)
             break;
 
         case DRIVE:
-            ctrl_set_mode(CTRL_BASE);
             forward(50);
             HAL_Delay(19200/1000*arg_number);
             forward(0);
@@ -170,19 +173,16 @@ void commander(void)
             break;   
 
         case PARK:
-            ctrl_set_mode(CTRL_BASE);
             parking();
             program = NONE;                       
             break;
 
         case FOLLOW_L:    //following left wall
-            ctrl_set_mode(CTRL_BASE);
             follow_left_wall();
             program = NONE;
             break;
 
         case FOLLOW_CURVE:    //following left wall and make curve
-            ctrl_set_mode(CTRL_BASE);
             follow_curve();
             program = NONE;
             break;
@@ -204,7 +204,9 @@ void commander(void)
             break;
 
         case MAP: ;
-            print_map();
+            //print_map();
+            print_maze();
+            program = NONE;
             break;
 
         case W_READ: ;

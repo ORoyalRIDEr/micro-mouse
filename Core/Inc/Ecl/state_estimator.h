@@ -26,6 +26,13 @@ void estimator_callback(void);
 /* Initialize internal maze */
 void init_maze(void);
 
+/**
+ * @brief Uses the distance measurements to build up map and estimate position in maze
+ * 
+ * @param dist Distance Measurements: FRONT, BACK, RIGHT, LEFT
+ */
+void slam(int32_t dist[]);
+
 void print_maze(void);
 
 #endif // STATE_ESTIMATOR_H

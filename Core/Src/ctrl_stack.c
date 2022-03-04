@@ -5,8 +5,9 @@
 #include <Ecl/orientation_ctrl.h>
 
 #define SUB_CTRL_PRESCALER (MAIN_CTRL_FREQ/SUB_CTRL_FREQ)
+#define MODE_ACTIVE(mode) (ctrl_mode & (1<<mode))
 
-enum ctrl_modes_t ctrl_mode = CTRL_BASE;
+uint32_t ctrl_mode = 0;
 
 /* this function is called at MAIN_CTRL_FREQ */
 void ctrl_callback ()
@@ -16,12 +17,18 @@ void ctrl_callback ()
     if (main_ctrl_counter == SUB_CTRL_PRESCALER) {
         main_ctrl_counter = 0;
         /* this function is called at SUB_CTRL_FREQ */
-
-        HCSR04_Measure();
         estimator_callback();
 
-        if (ctrl_mode >= CTRL_ORIENTATION)
+        if (MODE_ACTIVE(CTRL_ORIENTATION))
             orientation_ctrl_callback();
+
+        if (MODE_ACTIVE(EST_SLAM)) {
+            int32_t dist[4];
+            HCSR04_Read(dist);
+            slam(dist);
+        }
+
+        HCSR04_Measure(); // measure at the end of loop such that data is available at next loop
     }
 
     engine_timer_callback();
@@ -29,5 +36,9 @@ void ctrl_callback ()
 
 void ctrl_set_mode (enum ctrl_modes_t mode)
 {
-    ctrl_mode = mode;
+    ctrl_mode |= 1 << mode;
+}
+void ctrl_unset_mode (enum ctrl_modes_t mode)
+{
+    ctrl_mode &= ~(1<<mode);
 }
