@@ -60,7 +60,6 @@ int32_t sin1000(int32_t rad1000)
     return sind1000(rad10002deg(rad1000));
 }
 
-<<<<<<< HEAD
 int32_t absolute(int32_t value){
     if (value >= 0){
         return value;
@@ -71,7 +70,6 @@ int32_t absolute(int32_t value){
 } 
 
 
-=======
 void mat_vec_mult(int32_t* res, int32_t* mat, int32_t* vec, uint8_t n_cols, uint8_t n_rows)
 {
     for (uint8_t row=0; row<n_rows; row++) {
@@ -101,4 +99,3 @@ int32_t median(int32_t vals[], uint8_t n_vals)
 
     return buf[n_vals/2];
 }
->>>>>>> main
