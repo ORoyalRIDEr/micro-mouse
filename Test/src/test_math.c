@@ -93,8 +93,6 @@ void test_atan21000()
         int32_t diff = act - exp[i];
         if (diff > threshold || diff < -threshold)
             printf("%i/%i: in: (%i, %i), out: %i, exp: %i\n", i, n_vals, x[i], y[i], act, exp[i]);
-        else
-            printf("passed\n");
     }
     printf("done\n");
 }

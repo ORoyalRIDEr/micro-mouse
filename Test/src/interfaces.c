@@ -14,3 +14,8 @@ void get_engine_odometry(int16_t ret_steps[])
 {
 
 }
+
+int16_t get_speed_cmd(void)
+{
+    return 100;
+}

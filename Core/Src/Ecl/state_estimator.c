@@ -16,9 +16,11 @@
 #define SLAM_N_MEAS 10  // number of measurements needed to determine if a wall exists or not
 #define SLAM_MAX_ANGLE 262 // 1000 rad, 262->15°, minimum accept angular deviation from grid alignment
 #define SLAM_WALL_REC_THRESHOLD (60*1000) // um, threshold to recognize a wall
-#define SLAM_LOC_K 1/4 // Gain which is used to correct the position with measurements
+#define SLAM_LOC_K_POS 1/4 // Gain which is used to correct the position with measurements
+#define SLAM_LOC_K_PSI 1/2 // Gain which is used to correct the orientation with measurements
 #define SLAM_MAX_RANGE (400*1000) // um, maximum range where the range measurement is trusted
-#define SLAM_MAX_U (5*1000) // um, maximum correction based on one measurement
+#define SLAM_MAX_U_POS (5*1000) // um, maximum position correction based on one measurement
+#define SLAM_MAX_U_PSI 262 // 1000 rad, maximum angle correction based on one measurement
 #define SLAM_BROKEN_MEAS_THRESHOLD (1000*1000) // um, measurements above this value are ignored
 
 // offset of sensor in local frame
@@ -84,9 +86,6 @@ void slam(int32_t dist[])
     };
 
     //cprintf("pos: (%i, %i)\n", est_pos[0], est_pos[1]);
-
-    // store old position to calculate change
-    uint32_t pos_old[2] = {est_pos[0], est_pos[1]};
 
     // process individual measurements
     for (uint8_t laser=0; laser<4; laser++) {
@@ -201,9 +200,9 @@ void slam(int32_t dist[])
                 if (*maze_loc >= SLAM_N_MEAS) { // there is a wall
                     continue_slam = 0;
                     // correct position with given error
-                    int32_t u = ddist * SLAM_LOC_K;
+                    int32_t u = ddist * xfe[1-row] / 1000 * SLAM_LOC_K_POS; // xfe[1-row] considers the cosine
                     // limit correction input such that bad input values cannot disturb position too much
-                    u = u>SLAM_MAX_U ? SLAM_MAX_U : (u<-SLAM_MAX_U ? -SLAM_MAX_U : u);
+                    u = u>SLAM_MAX_U_POS ? SLAM_MAX_U_POS : (u<-SLAM_MAX_U_POS ? -SLAM_MAX_U_POS : u);
 
                     //cprintf("Dir: %i, Loc error: %i \n\r", dir, ddist);
                     switch (dir)
@@ -249,15 +248,32 @@ void slam(int32_t dist[])
     }
 
     /* correcting heading */
-/*    int32_t V[2] = {
-        (est_pos[0] - pos_old[0]) * EST_FREQ,
-        (est_pos[1] - pos_old[1]) * EST_FREQ,
-    };
-    int32_t vydot_loc = 
-        pos_x_aligned ? V[0] : (
-        neg_x_aligned ? -V[0]
-        )
-    ;*/
+    static int32_t pos_old[2] = {0xDEADBEEF, 0xDEADBEEF};
+    if ((pos_old[0] == 0xDEADBEEF) && (pos_old[1] == 0xDEADBEEF)) {
+        // init pos_old
+        pos_old[0] = est_pos[0];
+        pos_old[1] = est_pos[1];
+    }
+    else {
+        int32_t scaler = 128; // 2^9 to improve compiler optimisation options; this is used when the absolute value doesnt matter
+        int32_t dPos[2] = {
+            (est_pos[0] - pos_old[0]),
+            (est_pos[1] - pos_old[1]),
+        };
+        int32_t V2 = (dPos[0]/100*dPos[0] + dPos[1]/100*dPos[1])/10000;
+        V2 = V2 > 50 ? 50 : V2;
+        int32_t V_Psi = atan21000(dPos[1]/scaler, dPos[0]/scaler)*1000;
+        int32_t dPsi = V_Psi - est_Psi;
+        int32_t PIe6 = PI1000 * 1000;
+        dPsi = dPsi>PIe6 ? dPsi-(2*PIe6) : (dPsi<(-PIe6) ? dPsi+(2*PIe6) : dPsi);
+        //cprintf("posShift: (%i,%i), V_Psi: %i, dPsi: %i, V2: %i \n\r", dPos[0], dPos[1], V_Psi*180/PI1000/1000, dPsi*180/PI1000/1000, V2);
+
+        // make gain dependant on current velocity command
+        est_Psi += dPsi*V2/50/2 * SLAM_LOC_K_PSI; // 50 = 2*5^2 -> Gain is 1 if Position changed 5mm in both directions
+
+        pos_old[0] = est_pos[0];
+        pos_old[1] = est_pos[1];
+    }
 }
 
 void estimator_callback()
