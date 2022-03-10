@@ -12,8 +12,10 @@
 
 #include <Ecl/state_estimator.h>
 #include <Ecl/orientation_ctrl.h>
+#include <Ecl/position_ctrl.h>
 
-volatile enum program {NONE, GO, STOP, TURN, DIST, STATE, HEADING, DRIVE, PARK, FOLLOW_L, FOLLOW_CURVE, ORIENT, SAMPLE_MAP, SAMPLE_ROUTE, MAP, W_WRITE, W_READ, POSITION, HEADING_2} program;
+volatile enum program {NONE, GO, STOP, TURN, POSITION_CTRL, DIST, STATE, HEADING, DRIVE, PARK, FOLLOW_L, FOLLOW_CURVE, ORIENT, SAMPLE_MAP, SAMPLE_ROUTE, MAP, W_WRITE, W_READ, POSITION, HEADING_2} 
+    program;
 int32_t arg_number = 0;
 int32_t arg_1 = 0;
 int32_t arg_2 = 0;
@@ -21,6 +23,7 @@ int32_t arg_3 = 0;
 int32_t arg_4 = 0;
 int32_t arg_5 = 0;
 int32_t arg_6 = 0;
+
 void bt_callback(uint8_t argc, char* argv[])
 {
     char* str = argv[0];
@@ -49,6 +52,11 @@ void bt_callback(uint8_t argc, char* argv[])
         else if (strcmp("rt", argv[1])) {
             program = TURN;
             arg_number = atoi(argv[2]);
+        }
+        else if (strcmp("pos", argv[1])) {
+            program = POSITION_CTRL;
+            arg_1 = atoi(argv[2]);
+            arg_2 = atoi(argv[3]);
         }
     }
     else if (strcmp("ctrl", str)) {
@@ -187,9 +195,17 @@ void commander(void)
             program = NONE;
             break;
 
-         case ORIENT:
+        case ORIENT:
             ctrl_set_mode(CTRL_ORIENTATION);
             orientation_ctrl_setpoint(arg_number);
+            program = NONE;
+            break;
+
+        case POSITION_CTRL:;
+            int32_t args[] = {arg_1*1000, arg_2*1000};
+            pos_ctrl_setpoint(args, 50);
+            ctrl_set_mode(CTRL_ORIENTATION);
+            ctrl_set_mode(CTRL_POS);
             program = NONE;
             break;
 
