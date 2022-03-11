@@ -32,8 +32,8 @@ TIM_HandleTypeDef* htim;
 
 void delay (uint16_t time)
 {
-	__HAL_TIM_SET_COUNTER(htim, 0);
-	while (__HAL_TIM_GET_COUNTER (htim) < time);
+	uint32_t start = __HAL_TIM_GET_COUNTER(htim);
+	while ((__HAL_TIM_GET_COUNTER(htim) - start) < time);
 }
 
 void HCSR04_Measure_direction (uint8_t direction)
@@ -71,7 +71,6 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *hcsr04_timer)
 		else   // if the first is already captured
 		{
 			IC_Val2_LEFT = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);  // read second value
-			__HAL_TIM_SET_COUNTER(htim, 0);  
 
 			if (IC_Val2_LEFT > IC_Val1_LEFT) {
 				Differences[DIST_LEFT][Diff_i[DIST_LEFT]] = IC_Val2_LEFT-IC_Val1_LEFT;
@@ -97,8 +96,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *hcsr04_timer)
 
 		else  // if the first is already captured
 		{
-			IC_Val2_BACK = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);  // read second value
-			__HAL_TIM_SET_COUNTER(htim, 0);  
+			IC_Val2_BACK = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);  // read second value  
 
 			if (IC_Val2_BACK > IC_Val1_BACK) {
 				Differences[DIST_BACK][Diff_i[DIST_BACK]] = IC_Val2_BACK-IC_Val1_BACK;
@@ -123,8 +121,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *hcsr04_timer)
 
 		else  // if the first is already captured
 		{
-			IC_Val2_FRONT = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_3);  // read second value
-			__HAL_TIM_SET_COUNTER(htim, 0);  
+			IC_Val2_FRONT = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_3);  // read second value 
 
 			if (IC_Val2_FRONT > IC_Val1_FRONT) {
 				Differences[DIST_FRONT][Diff_i[DIST_FRONT]] = IC_Val2_FRONT-IC_Val1_FRONT;
@@ -151,7 +148,6 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *hcsr04_timer)
 		else   // if the first is already captured
 		{
 			IC_Val2_RIGHT = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_4);  // read second value
-			__HAL_TIM_SET_COUNTER(htim, 0);  // reset the counter
 
 			if (IC_Val2_RIGHT > IC_Val1_RIGHT) {
 				Differences[DIST_RIGHT][Diff_i[DIST_RIGHT]] = IC_Val2_RIGHT-IC_Val1_RIGHT;

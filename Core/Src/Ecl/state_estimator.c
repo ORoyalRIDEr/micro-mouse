@@ -12,16 +12,15 @@
 #define EST_FREQ   SUB_CTRL_FREQ
 
 #define GRID_SIZE   7   // chunks
-#define CELL_SIZE   (200*1000) // um
 #define SLAM_N_MEAS 10  // number of measurements needed to determine if a wall exists or not
 #define SLAM_MAX_ANGLE 262 // 1000 rad, 262->15°, minimum accept angular deviation from grid alignment
 #define SLAM_WALL_REC_THRESHOLD (60*1000) // um, threshold to recognize a wall
 #define SLAM_LOC_K_POS 1/4 // Gain which is used to correct the position with measurements
-#define SLAM_LOC_K_PSI 1/2 // Gain which is used to correct the orientation with measurements
-#define SLAM_MAX_RANGE (400*1000) // um, maximum range where the range measurement is trusted
+#define SLAM_LOC_K_PSI 1/16 // Gain which is used to correct the orientation with measurements
+#define SLAM_MAX_RANGE (500*1000) // um, maximum range where the range measurement is trusted
 #define SLAM_MAX_U_POS (5*1000) // um, maximum position correction based on one measurement
 #define SLAM_MAX_U_PSI 262 // 1000 rad, maximum angle correction based on one measurement
-#define SLAM_BROKEN_MEAS_THRESHOLD (1000*1000) // um, measurements above this value are ignored
+#define SLAM_BROKEN_MEAS_THRESHOLD (800*1000) // um, measurements above this value are ignored
 
 // offset of sensor in local frame
 int32_t sens_off_loc[4][2] = { // FRONT, BACK, LEFT, RIGHT

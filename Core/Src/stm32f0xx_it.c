@@ -203,7 +203,7 @@ void TIM2_IRQHandler(void)
 void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
-  ctrl_callback();
+  ctrl_callback(&htim2);
   __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);
   return;
   /* USER CODE END TIM3_IRQn 0 */

@@ -14,7 +14,7 @@
 #include <Ecl/orientation_ctrl.h>
 #include <Ecl/position_ctrl.h>
 
-volatile enum program {NONE, GO, STOP, TURN, POSITION_CTRL, DIST, STATE, HEADING, DRIVE, PARK, FOLLOW_L, FOLLOW_CURVE, ORIENT, SAMPLE_MAP, SAMPLE_ROUTE, MAP, W_WRITE, W_READ, POSITION, HEADING_2} 
+volatile enum program {NONE, CPU, GO, STOP, TURN, POSITION_CTRL, DIST, FOLLOW_ROUTE, STATE, HEADING, DRIVE, PARK, FOLLOW_L, FOLLOW_CURVE, ORIENT, SAMPLE_MAP, SAMPLE_ROUTE, MAP, W_WRITE, W_READ, POSITION, HEADING_2} 
     program;
 int32_t arg_number = 0;
 int32_t arg_1 = 0;
@@ -36,6 +36,8 @@ void bt_callback(uint8_t argc, char* argv[])
             program = STATE;
         else if (strcmp("hd", argv[1]))
             program = HEADING;
+        else if (strcmp("cpu", argv[1]))
+            program = CPU;
     }
     else if (strcmp("mv", str)) {
         if (strcmp("sp", argv[1])) {
@@ -57,6 +59,10 @@ void bt_callback(uint8_t argc, char* argv[])
             program = POSITION_CTRL;
             arg_1 = atoi(argv[2]);
             arg_2 = atoi(argv[3]);
+        }
+        else if (strcmp("route", argv[1])) {
+            program = FOLLOW_ROUTE;
+            arg_1 = atoi(argv[2]);
         }
     }
     else if (strcmp("ctrl", str)) {
@@ -132,6 +138,11 @@ void commander(void)
     while (1)
     {
         switch(program) {
+        case CPU:
+            cprintf("  CPU usage: %i%%/1000\n\r", get_cpu_usage());
+            program = NONE;
+            break;
+
         case GO:
             forward(arg_number);
             program = NONE;
@@ -206,6 +217,13 @@ void commander(void)
             pos_ctrl_setpoint(args, 50);
             ctrl_set_mode(CTRL_ORIENTATION);
             ctrl_set_mode(CTRL_POS);
+            program = NONE;
+            break;
+
+        case FOLLOW_ROUTE:;
+            ctrl_set_mode(CTRL_ORIENTATION);
+            ctrl_set_mode(CTRL_POS);
+            follow_route(3, arg_1);
             program = NONE;
             break;
 

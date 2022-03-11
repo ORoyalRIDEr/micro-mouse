@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define CELL_SIZE   (200*1000) // um
+
 /* 
 Notes on coordinate system:
 - The origin of is the location at startup

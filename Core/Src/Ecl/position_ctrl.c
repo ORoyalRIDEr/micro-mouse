@@ -33,8 +33,8 @@ void head_to_target()
         (pos_setpoint[1] - pos[1]) / 1000,
         (pos_setpoint[0] - pos[0]) / 1000);
 
-    //cprintf("Psi cmd %i\n\r", pos_ctrl_Psi_cmd);
-    //cprintf("\t(%i,%i) -> (%i,%i)\n\r", pos[0] / 1000, pos[1] / 1000, pos_setpoint[0] / 1000, pos_setpoint[1] / 1000);
+    // cprintf("Psi cmd %i\n\r", pos_ctrl_Psi_cmd);
+    // cprintf("\t(%i,%i) -> (%i,%i)\n\r", pos[0] / 1000, pos[1] / 1000, pos_setpoint[0] / 1000, pos_setpoint[1] / 1000);
     orientation_ctrl_setpoint(pos_ctrl_Psi_cmd);
 }
 
@@ -78,14 +78,13 @@ void pos_ctrl_callback(void)
         if (manhattenDist < POS_CTRL_APPR_THRESHOLD)
         {
             if (manhattenDist < POS_CTRL_ACCEPT_RADIUS)
+            {
                 pos_ctrl_phase = REACHED;
+                forward(0);
+            }
             else
                 pos_ctrl_phase = APPROACH;
         }
-    }
-    else
-    {
-        forward(0);
     }
 }
 

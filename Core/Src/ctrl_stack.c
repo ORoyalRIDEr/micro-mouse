@@ -11,14 +11,17 @@
 #define MODE_ACTIVE(mode) (ctrl_mode & (1 << mode))
 
 uint32_t ctrl_mode = 0;
+uint32_t cpu_usage = 0; // percent * 1000
 
 /* this function is called at MAIN_CTRL_FREQ */
-void ctrl_callback()
+void ctrl_callback(TIM_HandleTypeDef *timer)
 {
     static uint16_t main_ctrl_counter = 0;
     main_ctrl_counter++;
     if (main_ctrl_counter == SUB_CTRL_PRESCALER)
     {
+        uint32_t loopstart = __HAL_TIM_GET_COUNTER(timer);
+
         main_ctrl_counter = 0;
         /* this function is called at SUB_CTRL_FREQ */
         estimator_callback();
@@ -36,7 +39,10 @@ void ctrl_callback()
         if (MODE_ACTIVE(CTRL_ORIENTATION))
             orientation_ctrl_callback();
 
-        HCSR04_Measure(); // measure at the end of loop such that data is available at next loop
+        HCSR04_Measure(); // measure at the end of loop such that data is available at next loop     
+
+        uint32_t looptime = __HAL_TIM_GET_COUNTER(timer) - loopstart;
+        cpu_usage = looptime * SUB_CTRL_FREQ * 100 /*%*/ * 1000 /*scaler*/ / 100000 /*s->us*/ ;
     }
 
     engine_timer_callback();
@@ -49,4 +55,8 @@ void ctrl_set_mode(enum ctrl_modes_t mode)
 void ctrl_unset_mode(enum ctrl_modes_t mode)
 {
     ctrl_mode &= ~(1 << mode);
+}
+uint32_t get_cpu_usage()
+{
+    return cpu_usage;
 }

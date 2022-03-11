@@ -183,7 +183,7 @@ uint8_t* get_map(void){
 }
 
 uint8_t* get_route(void){
-    return *route;
+    return route;
 }
 
 uint8_t* get_position(void){
