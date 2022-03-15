@@ -4,7 +4,7 @@
 #include "stm32f0xx_hal.h"
 
 #define MAIN_CTRL_FREQ  1000  // Hz
-#define SUB_CTRL_FREQ   20    // Hz
+#define SUB_CTRL_FREQ   10    // Hz
 
 /* These controllers can be added or removed individually */
 enum ctrl_modes_t {CTRL_ORIENTATION, CTRL_POS, EST_SLAM, CTRL_EST_ALL=0xFFFFFFFF};
