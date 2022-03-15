@@ -25,6 +25,7 @@
 #include <commander.h>
 #include <ctrl_stack.h>
 #include <Drivers/HCSR04.h>
+#include <Drivers/I3G4250D_gyro.h>
 #include <Drivers/ZS040.h>
 #include <Ecl/state_estimator.h>
 /* USER CODE END Includes */
@@ -106,9 +107,8 @@ int main(void)
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
 
-  // setup controller stack
-  HAL_TIM_Base_Start_IT(&htim3);
-  htim3.Instance->ARR = (SYS_FREQ / MAIN_CTRL_FREQ) - 1;
+  HAL_GPIO_WritePin(NCS_MEMS_SPI_GPIO_Port, NCS_MEMS_SPI_Pin, GPIO_PIN_SET); // Slave select for gyro
+  //HAL_Delay(100); // wait for external peripherals to start up
 
   // setup uart
   ZS040_init(&huart3, bt_callback);
@@ -117,8 +117,17 @@ int main(void)
   HAL_TIM_Base_Start(&htim2);
   HCSR04_Init(&htim2);
 
+  // setup gyro
+  I3G4250D_gyro_Init(&hspi2);
+  HAL_Delay(1000); // wait until fingers are removed from Wall-E and he stopped vibrating
+  I3G4250D_gyro_Calibrate(); // this takes another second
+
   // setup slam
   init_maze();
+
+  // setup controller stack
+  HAL_TIM_Base_Start_IT(&htim3);
+  htim3.Instance->ARR = (SYS_FREQ / MAIN_CTRL_FREQ) - 1;
 
   /* USER CODE END 2 */
 
@@ -196,7 +205,7 @@ static void MX_SPI2_Init(void)
   hspi2.Init.CLKPolarity = SPI_POLARITY_HIGH;
   hspi2.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;

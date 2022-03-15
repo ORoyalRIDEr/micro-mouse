@@ -4,10 +4,10 @@
 #include <stdint.h>
 
 /* Converts value in degree to value in radian*1000
-(e.g. rad10002deg(1000*pi/4 = 785)  =  45) */
+(e.g. deg2rad1000(45)  =  785 = 1000*pi/4) */
 int32_t deg2rad1000(int32_t deg);
 /* Converts value in radian*1000 to degree
-(e.g. deg2rad1000(45)  =  785 = 1000*pi/4) */
+(e.g. rad10002deg(1000*pi/4 = 785)  =  45) */
 int32_t rad10002deg(int32_t rad1000);
 
 /* Returns cosine*1000 for angle in degree
