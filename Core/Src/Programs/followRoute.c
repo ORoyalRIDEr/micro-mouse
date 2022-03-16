@@ -9,11 +9,17 @@ void follow_route(uint8_t routeLength, int32_t speed)
 {
     //uint8_t *route[2] = get_route();
     uint8_t route[][2] = {
-        {2, 0}
+        {1, 0},
+        {1, 2},
+        {2, 2},
+        {2, 4},
+        {3, 4},
+        {3, 3},
+
         //{2, 1},
         //{1, 1}
     };
-    routeLength = 1;
+    routeLength = 6;
 
     for (uint8_t i=0; i<routeLength; i++) {
         int32_t target[] = {

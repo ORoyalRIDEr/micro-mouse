@@ -13,10 +13,11 @@
 #define EST_FREQ SUB_CTRL_FREQ
 
 #define GRID_SIZE 7                             // chunks
+#define WALL_THICKNESS 8000                     // um
 #define SLAM_N_MEAS 10                          // number of measurements needed to determine if a wall exists or not
 #define SLAM_MAX_ANGLE 262                      // 1000 rad, 262->15°, minimum accept angular deviation from grid alignment
 #define SLAM_WALL_REC_THRESHOLD (60 * 1000)     // um, threshold to recognize a wall
-#define SLAM_LOC_K_POS 1 / 2                    // Gain which is used to correct the position with measurements
+#define SLAM_LOC_K_POS 1 / 6                    // Gain which is used to correct the position with measurements
 #define SLAM_LOC_K_PSI 1 / 16                   // Gain which is used to correct the orientation with measurements
 #define SLAM_MAX_RANGE (500 * 1000)             // um, maximum range where the range measurement is trusted
 #define SLAM_MAX_U_POS (5 * 1000)               // um, maximum position correction based on one measurement
@@ -25,10 +26,10 @@
 
 // offset of sensor in local frame
 int32_t sens_off_loc[4][2] = { // FRONT, BACK, LEFT, RIGHT
-    {78000, 0},
+    {80000, 0},
     {-10000, 0},
-    {60000, -45000},
-    {60000, 45000}};
+    {50000, -45000},
+    {50000, 45000}};
 
 int32_t est_pos[] = {100 * 1000, 100 * 1000}; // um
 int32_t est_V = 0;                            // um/s
@@ -53,6 +54,11 @@ void get_state(int32_t pos[], int32_t *V, int32_t *Psi)
  */
 void slam(int32_t dist[])
 {
+    cprintf("Front: %i\t Left: %i\t Right: %i, Pos: (%i,%i)\n\r", dist[DIST_FRONT]/1000, dist[DIST_LEFT]/1000, dist[DIST_RIGHT]/1000, est_pos[0]/1000, est_pos[1]/1000);
+    // subtract wall thicknes
+    for (uint8_t i=0; i<4; i++)
+        dist[i] += WALL_THICKNESS;
+
     // only apply slam if aligned to grid (that is, not while turning)
     uint8_t pos_x_aligned = ((est_Psi / 1000 > (-SLAM_MAX_ANGLE)) && (est_Psi / 1000 < (SLAM_MAX_ANGLE)));
     uint8_t neg_x_aligned = (est_Psi / 1000 < (-PI1000 + SLAM_MAX_ANGLE)) || (est_Psi / 1000 > (PI1000 - SLAM_MAX_ANGLE));
@@ -90,7 +96,7 @@ void slam(int32_t dist[])
     {
         // invalid or non existing measurements are marked as
         // -1 by the distance sensor driver
-        if ((dist[laser] <= 0) || (dist[laser] >= SLAM_BROKEN_MEAS_THRESHOLD))
+        if ((dist[laser] <= 40000) || (dist[laser] >= SLAM_BROKEN_MEAS_THRESHOLD))
             continue;
 
         /* follow the laser direction for DIST_MAX
@@ -168,7 +174,7 @@ void slam(int32_t dist[])
 
         int32_t pos_sens_glob[2];
         vec_add(pos_sens_glob, est_pos, sens_off_glob, 2);
-        // cprintf("Offset: (%i, %i) -> (%i, %i)\n", sens_offset[laser][0], sens_offset[laser][1] ,pse[0], pse[1]);
+        //cprintf("Offset: (%i, %i) -> (%i, %i)\n", sens_offset[laser][0], sens_offset[laser][1] ,pse[0], pse[1]);
 
         int32_t row;    // row=0->problem in x direction; row=1->y direction
         uint16_t m = 0; // index of wall that is hit next by laser in this direction
@@ -234,6 +240,7 @@ void slam(int32_t dist[])
                     int32_t u = ddist * xfe[1 - row] / 1000 * SLAM_LOC_K_POS; // xfe[1-row] considers the cosine
                     // limit correction input such that bad input values cannot disturb position too much
                     u = u > SLAM_MAX_U_POS ? SLAM_MAX_U_POS : (u < -SLAM_MAX_U_POS ? -SLAM_MAX_U_POS : u);
+                    
 
                     // cprintf("Dir: %i, Loc error: %i \n\r", dir, ddist);
                     switch (dir)
@@ -272,8 +279,6 @@ void slam(int32_t dist[])
                 { // there is a wall
                     (*maze_loc)++;
                     continue_slam = 0;
-                    if (*maze_loc == SLAM_WALL_REC_THRESHOLD)
-                        cprintf("Found wall (Maze loc: %i), delta dist: %i, dir: %i\n\r", *maze_loc, ddist, dir);
                 }
                 else
                 { // measurement is smaller than expected; this case does not make sense so it is not treated
@@ -281,6 +286,9 @@ void slam(int32_t dist[])
                     // cprintf("\tDiscard\n\r");
                 }
                 //cprintf("Mapping (Maze loc: %i), delta dist: %i, dir: %i\n\r", *maze_loc, ddist, dir);
+                if (*maze_loc == SLAM_N_MEAS)
+                    print_maze();
+                    //cprintf("Found wall (Maze loc: %i), delta dist: %i, dir: %i\n\r", *maze_loc, ddist, dir);
             }
         }
     }
@@ -347,7 +355,11 @@ void estimator_callback()
 
     /* calculate yaw increment and adjust heading */
     est_Psi += gyr_delta_Psi; //w / EST_FREQ; // gyro is very good, so currently odometry is not used  // 1000000
-    est_Psi = ((est_Psi + PI1000 * 1000) % (2 * PI1000 * 1000)) - PI1000 * 1000; // limit heading to -pi...pi
+    //est_Psi = ((est_Psi + PI1000 * 1000) % (2 * PI1000 * 1000)) - PI1000 * 1000; // limit heading to -pi...pi
+    if (est_Psi > deg2rad1000(180)*1000)
+        est_Psi = est_Psi - deg2rad1000(360*1000);
+    else if (est_Psi < -deg2rad1000(180*1000))
+        est_Psi = est_Psi + deg2rad1000(360*1000);
 
     /**
      * Position Estimation

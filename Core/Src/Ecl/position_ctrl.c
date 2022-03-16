@@ -9,9 +9,9 @@
 #include <Ecl/state_estimator.h>
 
 #define POS_CTRL_PHASE_THRESHOLD 87   // rad*1000; minimum heading offset at which driving starts
-#define POS_CTRL_ACCEPT_RADIUS 10000  // um; stop driving when setpoint is reached that close
+#define POS_CTRL_ACCEPT_RADIUS 5000  // um; stop driving when setpoint is reached that close
 #define POS_CTRL_APPR_THRESHOLD 50000 // um; from this distance on the orientation is not corrected anymore; this avoids the "Tüteneffekt" (https://depositonce.tu-berlin.de/bitstream/11303/6260/3/behrend_ferdinand.pdf)
-#define POS_CTRL_STOP_X_BEFORE 20000  // um; stop this amount in front of target; this is used to place the middle of the robot at the target, not the center of the coordinate system which lays between the wheels
+#define POS_CTRL_STOP_X_BEFORE 30000  // um; stop this amount in front of target; this is used to place the middle of the robot at the target, not the center of the coordinate system which lays between the wheels
 
 int32_t pos_setpoint[] = {0, 0};
 int32_t pos_ctrl_speed = 0;
@@ -30,11 +30,13 @@ void head_to_target()
     get_state(pos, &V, &Psi);
 
     pos_ctrl_Psi_cmd = atan21000(
-        (pos_setpoint[1] - pos[1]) / 1000,
-        (pos_setpoint[0] - pos[0]) / 1000);
+        (pos_setpoint[1] - pos[1]) / 10000,
+        (pos_setpoint[0] - pos[0]) / 10000);
 
     // cprintf("Psi cmd %i\n\r", pos_ctrl_Psi_cmd);
-    // cprintf("\t(%i,%i) -> (%i,%i)\n\r", pos[0] / 1000, pos[1] / 1000, pos_setpoint[0] / 1000, pos_setpoint[1] / 1000);
+    cprintf("\t(%i,%i), %i° -> (%i,%i) %i°\n\r", 
+        pos[0] / 1000, pos[1] / 1000, rad10002deg(Psi/1000),
+        pos_setpoint[0] / 1000, pos_setpoint[1] / 1000, rad10002deg(pos_ctrl_Psi_cmd));
     orientation_ctrl_setpoint(pos_ctrl_Psi_cmd);
 }
 
@@ -59,6 +61,7 @@ void pos_ctrl_callback(void)
     if (pos_ctrl_phase == HEAD)
     {
         head_to_target();
+        forward(10);
 
         if (absolute(dPsi) <= POS_CTRL_PHASE_THRESHOLD)
             pos_ctrl_phase = DRIVE;

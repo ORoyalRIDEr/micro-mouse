@@ -4,8 +4,8 @@
 #include <Ecl/state_estimator.h>
 #include <Drivers/lre_stepper.h>
 
-#define K_GAIN_INV 4
-#define MAX_TURN_RATE 50
+#define K_GAIN_INV 6
+#define MAX_TURN_RATE 40
 
 int32_t orient_setpoint = 0;
 
@@ -18,7 +18,7 @@ void orientation_ctrl_callback(void)
     // adjust delta to always choose the shortest direction to target
     if (delta > deg2rad1000(180))
         delta = delta - deg2rad1000(360);
-    if (delta < -deg2rad1000(180))
+    else if (delta < -deg2rad1000(180))
         delta = delta + deg2rad1000(360);
 
     int16_t turn_rate = delta / K_GAIN_INV;
@@ -32,5 +32,9 @@ void orientation_ctrl_callback(void)
 
 void orientation_ctrl_setpoint(int32_t orientation)
 {
+    if (orientation > deg2rad1000(180))
+        orientation = orientation - deg2rad1000(360);
+    else if (orientation < -deg2rad1000(180))
+        orientation = orientation + deg2rad1000(360);
     orient_setpoint = orientation;
 }
