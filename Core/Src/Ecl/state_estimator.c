@@ -16,7 +16,7 @@
 #define SLAM_N_MEAS 10                          // number of measurements needed to determine if a wall exists or not
 #define SLAM_MAX_ANGLE 262                      // 1000 rad, 262->15°, minimum accept angular deviation from grid alignment
 #define SLAM_WALL_REC_THRESHOLD (60 * 1000)     // um, threshold to recognize a wall
-#define SLAM_LOC_K_POS 1 / 4                    // Gain which is used to correct the position with measurements
+#define SLAM_LOC_K_POS 1 / 2                    // Gain which is used to correct the position with measurements
 #define SLAM_LOC_K_PSI 1 / 16                   // Gain which is used to correct the orientation with measurements
 #define SLAM_MAX_RANGE (500 * 1000)             // um, maximum range where the range measurement is trusted
 #define SLAM_MAX_U_POS (5 * 1000)               // um, maximum position correction based on one measurement
@@ -272,6 +272,8 @@ void slam(int32_t dist[])
                 { // there is a wall
                     (*maze_loc)++;
                     continue_slam = 0;
+                    if (*maze_loc == SLAM_WALL_REC_THRESHOLD)
+                        cprintf("Found wall (Maze loc: %i), delta dist: %i, dir: %i\n\r", *maze_loc, ddist, dir);
                 }
                 else
                 { // measurement is smaller than expected; this case does not make sense so it is not treated
@@ -307,7 +309,7 @@ void slam(int32_t dist[])
         uint32_t gain = est_V/100;
         if (gain > (1000*SLAM_LOC_K_PSI))
             gain = 1000*SLAM_LOC_K_PSI;
-        est_Psi += (dPsi / 1000 * gain);
+        //est_Psi += (dPsi / 1000 * gain);
 
         //cprintf("posShift: (%i,%i), Psi: %i, V_Psi: %i, dPsi: %i, gain: %i \n\r", dPos[0], dPos[1], est_Psi * 180 / PI1000 / 1000, V_Psi * 180 / PI1000 / 1000, dPsi * 180 / PI1000 / 1000, gain);
 

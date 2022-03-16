@@ -13,6 +13,8 @@
         "ctrl_stack.h": "c",
         "state_estimator.h": "c",
         "lre_stepper.h": "c",
-        "commander.h": "c"
+        "commander.h": "c",
+        "i3g4250d_gyro.h": "c",
+        "cmath.h": "c"
     }
 }

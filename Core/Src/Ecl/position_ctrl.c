@@ -11,7 +11,7 @@
 #define POS_CTRL_PHASE_THRESHOLD 87   // rad*1000; minimum heading offset at which driving starts
 #define POS_CTRL_ACCEPT_RADIUS 10000  // um; stop driving when setpoint is reached that close
 #define POS_CTRL_APPR_THRESHOLD 50000 // um; from this distance on the orientation is not corrected anymore; this avoids the "Tüteneffekt" (https://depositonce.tu-berlin.de/bitstream/11303/6260/3/behrend_ferdinand.pdf)
-#define POS_CTRL_STOP_X_BEFORE 30000  // um; stop this amount in front of target; this is used to place the middle of the robot at the target, not the center of the coordinate system which lays between the wheels
+#define POS_CTRL_STOP_X_BEFORE 20000  // um; stop this amount in front of target; this is used to place the middle of the robot at the target, not the center of the coordinate system which lays between the wheels
 
 int32_t pos_setpoint[] = {0, 0};
 int32_t pos_ctrl_speed = 0;

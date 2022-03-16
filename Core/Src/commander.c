@@ -228,6 +228,7 @@ void commander(void)
             follow_route(3, arg_1);
             ctrl_unset_mode(CTRL_ORIENTATION);
             ctrl_unset_mode(CTRL_POS);
+            forward(0);
             program = NONE;
             break;
 
