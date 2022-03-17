@@ -16,20 +16,20 @@
 #define WALL_THICKNESS 8000                     // um
 #define SLAM_N_MEAS 10                          // number of measurements needed to determine if a wall exists or not
 #define SLAM_MAX_ANGLE 262                      // 1000 rad, 262->15°, minimum accept angular deviation from grid alignment
-#define SLAM_WALL_REC_THRESHOLD (60 * 1000)     // um, threshold to recognize a wall
-#define SLAM_LOC_K_POS 1 / 6                    // Gain which is used to correct the position with measurements
+#define SLAM_WALL_REC_THRESHOLD (50 * 1000)     // um, threshold to recognize a wall
+#define SLAM_LOC_K_POS 1 / 4                    // Gain which is used to correct the position with measurements
 #define SLAM_LOC_K_PSI 1 / 16                   // Gain which is used to correct the orientation with measurements
-#define SLAM_MAX_RANGE (500 * 1000)             // um, maximum range where the range measurement is trusted
-#define SLAM_MAX_U_POS (5 * 1000)               // um, maximum position correction based on one measurement
+#define SLAM_MAX_RANGE (400 * 1000)             // um, maximum range where the range measurement is trusted
+#define SLAM_MAX_U_POS (10 * 1000)               // um, maximum position correction based on one measurement
 #define SLAM_MAX_U_PSI 262                      // 1000 rad, maximum angle correction based on one measurement
 #define SLAM_BROKEN_MEAS_THRESHOLD (800 * 1000) // um, measurements above this value are ignored
 
 // offset of sensor in local frame
 int32_t sens_off_loc[4][2] = { // FRONT, BACK, LEFT, RIGHT
-    {80000, 0},
+    {65000, 0},
     {-10000, 0},
-    {50000, -45000},
-    {50000, 45000}};
+    {50000, -33000},
+    {50000, 33000}};
 
 int32_t est_pos[] = {100 * 1000, 100 * 1000}; // um
 int32_t est_V = 0;                            // um/s
@@ -54,10 +54,11 @@ void get_state(int32_t pos[], int32_t *V, int32_t *Psi)
  */
 void slam(int32_t dist[])
 {
-    cprintf("Front: %i\t Left: %i\t Right: %i, Pos: (%i,%i)\n\r", dist[DIST_FRONT]/1000, dist[DIST_LEFT]/1000, dist[DIST_RIGHT]/1000, est_pos[0]/1000, est_pos[1]/1000);
     // subtract wall thicknes
     for (uint8_t i=0; i<4; i++)
         dist[i] += WALL_THICKNESS;
+
+    cprintf("Front: %i\t Left: %i\t Right: %i, Pos: (%i,%i), Psi: %i°\n\r", dist[DIST_FRONT]/1000, dist[DIST_LEFT]/1000, dist[DIST_RIGHT]/1000, est_pos[0]/1000, est_pos[1]/1000, rad10002deg(est_Psi/1000));
 
     // only apply slam if aligned to grid (that is, not while turning)
     uint8_t pos_x_aligned = ((est_Psi / 1000 > (-SLAM_MAX_ANGLE)) && (est_Psi / 1000 < (SLAM_MAX_ANGLE)));
@@ -203,8 +204,9 @@ void slam(int32_t dist[])
             // k: distance to next wall
             // multiplication with 1000 because rse contains sin/cos * 1000
             // cprintf("Pos: (%i,%i), Sensor: (%i,%i)\n", est_pos[0], est_pos[1], pos_sens_glob[0], pos_sens_glob[1]);
-            int32_t k = (m * CELL_SIZE - pos_sens_glob[row]) * 1000 / (rse[row][laser]);
-            // cprintf("laser: %i, dir: %i, wall: %i, k: %i\n", laser, dir, m, k);
+            int32_t k = (m * CELL_SIZE - pos_sens_glob[row]);// * 1000 / (rse[row][laser]);
+            cprintf("%i: Pos sens glob: (%i,%i)\n\r", laser,  pos_sens_glob[0], pos_sens_glob[1]);
+            //cprintf("laser: %i, dir: %i, wall: %i, k: %i\n\r", laser, dir, m, k);
             if (k >= SLAM_MAX_RANGE)
                 break;
 
@@ -237,25 +239,27 @@ void slam(int32_t dist[])
                 { // there is a wall
                     continue_slam = 0;
                     // correct position with given error
-                    int32_t u = ddist * xfe[1 - row] / 1000 * SLAM_LOC_K_POS; // xfe[1-row] considers the cosine
+                    int32_t u = ddist /** xfe[1 - row] / 1000*/ * SLAM_LOC_K_POS; // xfe[1-row] considers the cosine
                     // limit correction input such that bad input values cannot disturb position too much
                     u = u > SLAM_MAX_U_POS ? SLAM_MAX_U_POS : (u < -SLAM_MAX_U_POS ? -SLAM_MAX_U_POS : u);
-                    
 
-                    // cprintf("Dir: %i, Loc error: %i \n\r", dir, ddist);
                     switch (dir)
                     {
                     case N:
                         est_pos[0] -= u;
+                        cprintf("%i: ddist: %i -> %i to N, ", laser, ddist, -u);
                         break;
                     case S:
                         est_pos[0] += u;
+                        cprintf("%i: ddist: %i -> %i to N, ", laser, ddist, u);
                         break;
                     case E:
                         est_pos[1] -= u;
+                        cprintf("%i: ddist: %i -> %i to E, ", laser, ddist, -u);
                         break;
                     case W:
                         est_pos[1] += u;
+                        cprintf("%i: ddist: %i -> %i to E, ", laser, ddist, u);
                         break;
                     default:
                         break;
@@ -291,7 +295,9 @@ void slam(int32_t dist[])
                     //cprintf("Found wall (Maze loc: %i), delta dist: %i, dir: %i\n\r", *maze_loc, ddist, dir);
             }
         }
+        
     }
+    cprintf("\n\r");
 
     /* correcting heading */
     static int32_t pos_old[2] = {0xDEADBEEF, 0xDEADBEEF};
@@ -381,9 +387,33 @@ void init_maze()
         for (uint8_t y = 0; y <= GRID_SIZE; y++)
         {
             maze[x][y] =
-                (x == 0 || x == 2 * GRID_SIZE || ((x % 2 == 1) && (y == 0)) || y == GRID_SIZE) ? 10 : 0;
+                (x == 0 || x == 2 * GRID_SIZE || ((x % 2 == 1) && (y == 0)) || y == GRID_SIZE) ? 10 : -10;
         }
     }
+
+    maze[8][0] = 10;
+    maze[1][1] = 10;
+    maze[2][1] = 10;
+    maze[3][1] = 10;
+    maze[5][1] = 10;
+    maze[11][1] = 10;
+    maze[12][1] = 10;
+    maze[5][2] = 10;
+    maze[6][2] = 10;
+    maze[7][2] = 10;
+    maze[9][2] = 10;
+    maze[10][2] = 10;
+    maze[12][2] = 10;
+    maze[3][3] = 10;
+    maze[5][3] = 10;
+    maze[6][3] = 10;
+    maze[8][3] = 10;
+    maze[10][3] = 10;
+    maze[12][3] = 10;
+    maze[2][4] = 10;
+    maze[3][4] = 10;
+    maze[4][4] = 10;
+    maze[6][4] = 10;
 }
 
 void print_maze()

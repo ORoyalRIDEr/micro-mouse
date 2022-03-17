@@ -1,5 +1,5 @@
 IDIR =../Core/Inc ../Drivers
-SDIR =../Core/Src/Lib ../Core/Src/Ecl
+SDIR =../Core/Src/Lib #../Core/Src/Ecl
 SDIRT =src/
 CC=gcc
 TARG=STM32F072xB
@@ -16,8 +16,9 @@ LIBS=-lm
 
 DEPS = $(shell find $(IDIR) -name '*.h')
 
-SRCS = $(shell find $(SDIR) -name '*.c')
-SRCST = $(shell find $(SDIRT) -name '*.c')
+SRCS = $(shell find $(SDIR) -name '*.c') ../Core/Src/Ecl/orientation_ctrl.c
+#SRCST = $(shell find $(SDIRT) -name '*.c')
+SRCST = src/interfaces.c src/main.c src/test_math.c src/test_ctrl.c
 OBJ = $(patsubst %.c,%.o,$(patsubst %,$(ODIR)/%,$(subst ../,,$(SRCS))))
 OBJT = $(patsubst %.c,%.o,$(patsubst %,$(ODIRT)/%,$(SRCST)))
 

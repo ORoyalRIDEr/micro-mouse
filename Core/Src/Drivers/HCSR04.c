@@ -6,7 +6,7 @@
 /****************************************************************************************************************************
  * HCRS04 Sensor Driver
  ***************************************************************************************************************************/
-#define MEDIAN_BUF_SIZE 5
+#define MEDIAN_BUF_SIZE 1
 
 int32_t Differences[4][MEDIAN_BUF_SIZE];
 uint8_t Diff_i[] = {0, 0, 0, 0}; // index of the Differences buffer
@@ -175,7 +175,7 @@ void HCSR04_Measure()
 void HCSR04_Read (int32_t distances[])
 {
 	for (uint8_t i=0; i<4; i++) {
-		int32_t travel_time = median(&(Differences[i][0]), MEDIAN_BUF_SIZE);
+		int32_t travel_time = Differences[i][0];
 		distances[i] = travel_time * 343/2; // Distance in µm
 	}
 }

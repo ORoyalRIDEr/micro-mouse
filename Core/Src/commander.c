@@ -208,7 +208,7 @@ void commander(void)
 
         case ORIENT:
             ctrl_set_mode(CTRL_ORIENTATION);
-            orientation_ctrl_setpoint(arg_number);
+            orientation_ctrl_setpoint(arg_number, REL);
             program = NONE;
             break;
 

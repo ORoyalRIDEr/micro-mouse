@@ -3,7 +3,14 @@
 
 #include <stdint.h>
 
-void orientation_ctrl_setpoint(int32_t orientation);
+enum orient_mode_t
+{
+    FWD, // Turn by moving forward
+    BWD, // Turn by moving backward
+    REL  // Turn relative to current speed
+};
+
+void orientation_ctrl_setpoint(int32_t orientation, enum orient_mode_t mode);
 void orientation_ctrl_callback(void);
 
 #endif // ORIENTATION_CTRL_H

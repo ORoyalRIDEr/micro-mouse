@@ -97,6 +97,23 @@ void test_atan21000()
     printf("done\n");
 }
 
+void test_sqrt()
+{
+    int32_t threshold = 0;
+
+    int32_t x[] = {4,16,100,4567,123456789};
+    int32_t exp[] = {2,4,10,67,11111};
+    int32_t n_vals = sizeof(x)/sizeof(x[0]);
+    printf("Test sqrt\n");
+    for (int32_t i=0; i<n_vals; i++) {
+        int32_t act = int_sqrt(x[i]);
+        int32_t diff = act - exp[i];
+        if (diff > threshold || diff < -threshold)
+            printf("%i/%i: in: %i, out: %i, exp: %i\n", i, n_vals, x[i], act, exp[i]);
+    }
+    printf("done\n");
+}
+
 void test_math()
 {
     test_math_vec_mult_scalar();
@@ -104,4 +121,5 @@ void test_math()
     test_math_vec_mult_2d();
     test_cos();
     test_atan21000();
+    test_sqrt();
 }

@@ -43,4 +43,6 @@ void vec_add(int32_t* res, int32_t* v1, int32_t* v2, uint8_t n_rows);
 
 int32_t median(int32_t vals[], uint8_t n_vals);
 
+uint32_t int_sqrt(uint32_t x);
+
 #endif // CMATH_H

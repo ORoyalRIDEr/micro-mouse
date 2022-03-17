@@ -57,9 +57,6 @@ void ctrl_callback(TIM_HandleTypeDef *timer)
         uint32_t looptime = __HAL_TIM_GET_COUNTER(timer) - loopstart;
         cpu_usage = looptime * SUB_CTRL_FREQ * 100 /*%*/ * 1000 /*scaler*/ / 100000 /*s->us*/ ;        
     }
-    
-
-    engine_timer_callback();
 }
 
 void ctrl_set_mode(enum ctrl_modes_t mode)
