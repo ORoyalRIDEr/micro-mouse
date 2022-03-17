@@ -221,15 +221,9 @@ void commander(void)
             break;
 
         case FOLLOW_ROUTE:;
-            ctrl_set_mode(EST_SLAM);
-            HAL_Delay(3000);
             ctrl_set_mode(CTRL_ORIENTATION);
-            ctrl_set_mode(CTRL_POS);
+            ctrl_set_mode(CTRL_DRIVE);
             follow_route(3, arg_1);
-            ctrl_unset_mode(CTRL_ORIENTATION);
-            ctrl_unset_mode(CTRL_POS);
-            ctrl_unset_mode(EST_SLAM);
-            forward(0);
             program = NONE;
             break;
 

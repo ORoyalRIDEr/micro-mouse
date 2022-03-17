@@ -7,6 +7,7 @@
 #include <Ecl/state_estimator.h>
 #include <Ecl/orientation_ctrl.h>
 #include <Ecl/position_ctrl.h>
+#include <Ecl/driver.h>
 
 #define GYRO_PRESCALER (MAIN_CTRL_FREQ / GYRO_FREQ)
 #define SUB_CTRL_PRESCALER (MAIN_CTRL_FREQ / SUB_CTRL_FREQ)
@@ -39,7 +40,7 @@ void ctrl_callback(TIM_HandleTypeDef *timer)
         /* this function is called at SUB_CTRL_FREQ */
         estimator_callback();
 
-        if (MODE_ACTIVE(EST_SLAM))
+        /*if (MODE_ACTIVE(EST_SLAM))
         {
             int32_t dist[4];
             HCSR04_Read(dist);
@@ -47,7 +48,14 @@ void ctrl_callback(TIM_HandleTypeDef *timer)
         }
 
         if (MODE_ACTIVE(CTRL_POS))
-            pos_ctrl_callback();
+            pos_ctrl_callback();*/
+
+        if (MODE_ACTIVE(CTRL_DRIVE))
+        {
+            int32_t dist[4];
+            HCSR04_Read(dist);
+            driver_callback(dist);
+        }
 
         if (MODE_ACTIVE(CTRL_ORIENTATION))
             orientation_ctrl_callback();

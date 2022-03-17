@@ -12,6 +12,7 @@ enum ctrl_modes_t
 {
     CTRL_ORIENTATION,
     CTRL_POS,
+    CTRL_DRIVE,
     EST_SLAM,
     CTRL_EST_ALL = 0xFFFFFFFF
 };

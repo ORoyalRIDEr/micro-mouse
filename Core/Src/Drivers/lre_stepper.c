@@ -137,12 +137,15 @@ void rotate(int16_t speed)
    int16_t spd1 = fwd_speed-speed;
    engine_speed[0] = spd0 > 100 ? 100 : (spd0 < -100 ? -100 : spd0);
    engine_speed[1] = spd1 > 100 ? 100 : (spd1 < -100 ? -100 : spd1);
+
+   //cprintf("turn %i\n\r", speed);
 } 
 
 void forward(int16_t speed)
 {
    engine_speed[0] = speed;
    engine_speed[1] = speed;
+   //cprintf("fwd %i\n\r", speed);
 }
 
 void engine_timer_callback()
