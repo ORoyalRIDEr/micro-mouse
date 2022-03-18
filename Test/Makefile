@@ -1,5 +1,5 @@
 IDIR =../Core/Inc ../Drivers
-SDIR =../Core/Src/Lib ../Core/Src/Ecl
+SDIR =../Core/Src/Lib ../Core/Src/Ecl ../Core/Src/Programs/pathFinding.c
 SDIRT =src/
 CC=gcc
 TARG=STM32F072xB

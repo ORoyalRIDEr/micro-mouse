@@ -7,7 +7,7 @@ extern int32_t est_pos[]; // um
 extern int32_t est_V;          // um/s
 extern int32_t est_Psi; // 1000 rad, -pi ... pi
 
-int32_t map[][8] = {
+int32_t map_2[][8] = {
       {1, 1, 1, 1, 1, 1, 1, 0},
     {1, 0, 0, 0, 0, 0, 0, 1},
       {0, 0, 0, 0, 0, 0, 0, 0},
