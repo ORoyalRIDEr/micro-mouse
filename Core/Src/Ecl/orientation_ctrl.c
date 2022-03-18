@@ -61,3 +61,8 @@ void orientation_ctrl_setpoint(int32_t orientation, enum orient_mode_t mode)
 
     orient_mode = mode;
 }
+
+int32_t orientation_ctrl_get_setpoint()
+{
+    return orient_setpoint;
+}

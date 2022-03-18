@@ -12,5 +12,6 @@ enum orient_mode_t
 
 void orientation_ctrl_setpoint(int32_t orientation, enum orient_mode_t mode);
 void orientation_ctrl_callback(void);
+int32_t orientation_ctrl_get_setpoint(void);
 
 #endif // ORIENTATION_CTRL_H

@@ -34,12 +34,15 @@ void follow_route(uint8_t routeLength, int32_t speed)
         {5, 4},
         {5, 6},
         {6, 6},
-        {6, 5},
+        {6, 5}
+        /*{2, 0},
+        {0, 0}*/
 
         //{2, 1},
         //{1, 1}
     };
     routeLength = 25;
+    //routeLength = 2;
 
     drive_route(route, routeLength, speed);
 }
