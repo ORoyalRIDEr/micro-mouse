@@ -14,8 +14,9 @@
 #define FLW_WALL_MAX_THRESHOLD 90000          // um, maximum distant, that wall is used to be followed
 #define INV_K_FLW_WALL 100                    // ctrl gain for: wall distance error -> heading offset
 #define TARGET_DIST_THRESHOLD 110000          // um, minimum distance to target waypoint to switch to next one
-#define MIN_DIST_FRONT 100000                 // um, switch to next waypoint if wall is this distance in front of rover
+#define MIN_DIST_FRONT 110000                 // um, switch to next waypoint if wall is this distance in front of rover
 #define CHUNK_SIZE 200000
+#define DIST_TRAVELLED_BY_180TURN 85000
 
 #define PRINT_STATE(state) cprintf(state) // this can be used to turn off printing of current driver state
 
@@ -70,6 +71,7 @@ void drive_route(uint8_t route[][2], uint8_t routeLength, int32_t speed)
 void driver_callback(uint32_t dist[])
 {
     static int32_t segment_start[] = {0, 0}; // location where the current line segment starts
+    static uint8_t has_turned_180 = 0;       // when turning 180°, the rover has moved in the target direction; this must be corrected
 
     int32_t cur_pos[2], cur_V, cur_Psi;
     get_state(cur_pos, &cur_V, &cur_Psi);
@@ -117,6 +119,7 @@ void driver_callback(uint32_t dist[])
             // rover has rotated first 90°; no turn to target
             int32_t orient = get_orientation_to_wp(driver_route[i_wp], current_chunk);
             orientation_ctrl_setpoint(orient, FWD);
+            has_turned_180 = 1;
 
             driv_state = ROTATING90;
             PRINT_STATE("Rotating 90°\n\r");
@@ -141,6 +144,8 @@ void driver_callback(uint32_t dist[])
 
         int32_t dist_to_travel = absolute((driver_route[i_wp][ind] - driver_route[i_wp - 1][ind]) * CHUNK_SIZE);
         int32_t dist_travelled = absolute(cur_pos[ind] - segment_start[ind]);
+        if (has_turned_180)
+            dist_travelled += DIST_TRAVELLED_BY_180TURN;
         uint32_t dist_remaining = absolute(dist_to_travel - dist_travelled);
         // cprintf("Direction: %i, %i->%i, remaining: %i\n\r", driving_dir, dist_travelled, dist_to_travel, dist_remaining);
 
@@ -168,6 +173,7 @@ void driver_callback(uint32_t dist[])
         {
             // target reached
             forward(0);
+            has_turned_180 = 0;
             current_chunk[0] = driver_route[i_wp][0];
             current_chunk[1] = driver_route[i_wp][1];
             i_wp++;
