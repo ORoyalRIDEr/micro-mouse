@@ -8,6 +8,8 @@
 #include <Lib/cmath.h>
 #include <Lib/printf.h>
 
+#include <programs.h>
+
 #define DRIVER_PHASE_THRESHOLD deg2rad1000(5) // rad*1000; minimum heading offset at which driving starts
 #define FLW_WALL_TARGET 50000                 // um; target distance for wall that is currently followed
 #define FLW_WALL_MIN_THRESHOLD 40000          // um, minimum distant, that wall is used to be followed
@@ -23,7 +25,9 @@
 int32_t get_orientation_to_wp(uint8_t wp_chunk[], uint8_t current_chunk[]);
 int32_t get_rel_angle_to(int32_t target);
 uint8_t orientation_reached();
-void follow_wall_callback(uint32_t dist[], int32_t dir);
+void follow_wall_callback(int32_t dist[], int32_t dir);
+void jcs2acs(uint8_t jcs[], uint8_t acs[]);
+void acs2jcs(uint8_t acs[], uint8_t jcs[]);
 
 enum driv_states_t
 {
@@ -34,33 +38,32 @@ enum driv_states_t
     MAPPING
 } driv_state = IDLE;
 
-enum driving_dir_t
-{
-    N,
-    S,
-    E,
-    W
-} driving_dir = N;
+enum driving_dir_t driving_dir = N;
 
-uint8_t driver_route[30][2];
+uint8_t driver_route[50][2];
 uint8_t driver_routeLength;
 int32_t driver_speed;
 uint8_t i_wp = 0;
 uint8_t mapping_active = 0;
 uint8_t current_chunk[] = {0, 0};
 
-void drive_route(uint8_t route[][2], uint8_t routeLength, int32_t speed)
+void drive_route(uint8_t route[], uint8_t routeLength, int32_t speed)
 {
     // first waypoint needs to be current chunk
-    driver_route[0][0] = current_chunk[0];
-    driver_route[0][1] = current_chunk[1];
+    cprintf("Driving Route:\n\r");
     for (uint8_t i = 0; i < routeLength; i++)
     {
-        driver_route[i + 1][0] = route[i][0];
-        driver_route[i + 1][1] = route[i][1];
-    }
+        acs2jcs(&(route[2*i]), driver_route[i + 1]);
 
-    driver_routeLength = routeLength + 1; // first chunk was added
+        driver_route[i][0] = MAP_SIDE - route[2*i] - 1;
+        driver_route[i][1] = route[2*i+1];
+
+        cprintf("(%i, %i) -> ", (int)driver_route[i][0], (int)driver_route[i][1]);
+        //cprintf("(%i, %i) -> ", (int)route[2*i], (int)route[2*i+1]);
+    }
+    cprintf("\n\r");
+
+    driver_routeLength = routeLength; // first chunk was added
     driver_speed = speed;
     i_wp = 1; // first wp is current chunk, so start with next one
 
@@ -68,7 +71,7 @@ void drive_route(uint8_t route[][2], uint8_t routeLength, int32_t speed)
     PRINT_STATE("Mapping\n\r");
 }
 
-void driver_callback(uint32_t dist[])
+void driver_callback(int32_t dist[])
 {
     static int32_t segment_start[] = {0, 0}; // location where the current line segment starts
     static uint8_t has_turned_180 = 0;       // when turning 180°, the rover has moved in the target direction; this must be corrected
@@ -201,9 +204,7 @@ void driver_callback(uint32_t dist[])
             else
             {
                 int32_t target_dir = get_orientation_to_wp(driver_route[i_wp], current_chunk);
-                cprintf("\tTarget dir:%i\n\r", target_dir);
                 int32_t dPsi = get_rel_angle_to(target_dir);
-                cprintf("\tRel angle:%i\n\r", dPsi);
 
                 if (absolute(dPsi) > deg2rad1000(135))
                 {
@@ -276,7 +277,7 @@ uint8_t orientation_reached()
     return (absolute(dPsi) <= DRIVER_PHASE_THRESHOLD);
 }
 
-void follow_wall_callback(uint32_t dist[], int32_t dir)
+void follow_wall_callback(int32_t dist[], int32_t dir)
 {
     int8_t wall = 0; // 1 if can follow left wall; -1 if can follow right wall
     int32_t d = 0;
@@ -300,4 +301,29 @@ void follow_wall_callback(uint32_t dist[], int32_t dir)
     }
     else
         orientation_ctrl_setpoint(dir, REL);
+}
+
+void jcs2acs(uint8_t jcs[], uint8_t acs[])
+{
+    // jakobs coordinate system to atsos coordinate systems
+    acs[0] = jcs[1];
+    acs[1] = MAP_SIDE*2 - jcs[0];
+}
+
+void acs2jcs(uint8_t acs[], uint8_t jcs[])
+{
+    // atsos coordinate system to jakobs coordinate systems
+    jcs[0] = MAP_SIDE*2 - acs[1];
+    jcs[1] = acs[0];
+}
+
+void get_position(uint8_t pos[])
+{
+    pos[0] = current_chunk[1];
+    pos[1] = MAP_SIDE - current_chunk[0] - 1;
+}
+
+enum driving_dir_t get_heading(void)
+{
+    return driving_dir;
 }

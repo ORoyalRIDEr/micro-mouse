@@ -3,8 +3,19 @@
 
 #include <stdint.h>
 
-void drive_route(uint8_t route[][2], uint8_t routeLength, int32_t speed);
+enum driving_dir_t
+{
+    N,
+    S,
+    E,
+    W
+};
 
-void driver_callback(uint32_t dist[]);
+void drive_route(uint8_t route[], uint8_t routeLength, int32_t speed);
+
+void driver_callback(int32_t dist[]);
+
+void get_position(uint8_t pos[]);
+enum driving_dir_t get_heading(void);
 
 #endif // DRIVER_H
