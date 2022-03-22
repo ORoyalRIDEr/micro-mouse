@@ -4,6 +4,7 @@
 
 #include <Drivers/HCSR04.h>
 #include <Drivers/lre_stepper.h>
+#include <Drivers/I3G4250D_gyro.h>
 
 #include <Lib/cmath.h>
 #include <Lib/printf.h>
@@ -53,13 +54,13 @@ void drive_route(uint8_t route[], uint8_t routeLength, int32_t speed)
     cprintf("Driving Route:\n\r");
     for (uint8_t i = 0; i < routeLength; i++)
     {
-        acs2jcs(&(route[2*i]), driver_route[i + 1]);
+        acs2jcs(&(route[2 * i]), driver_route[i + 1]);
 
-        driver_route[i][0] = MAP_SIDE - route[2*i] - 1;
-        driver_route[i][1] = route[2*i+1];
+        driver_route[i][0] = MAP_SIDE - route[2 * i] - 1;
+        driver_route[i][1] = route[2 * i + 1];
 
         cprintf("(%i, %i) -> ", (int)driver_route[i][0], (int)driver_route[i][1]);
-        //cprintf("(%i, %i) -> ", (int)route[2*i], (int)route[2*i+1]);
+        // cprintf("(%i, %i) -> ", (int)route[2*i], (int)route[2*i+1]);
     }
     cprintf("\n\r");
 
@@ -116,10 +117,22 @@ void driver_callback(int32_t dist[])
 
     else if (driv_state == ROTATING180)
     {
+        // switch to ROTATING90 if rover is stuck
+        static uint8_t low_yaw_rate_cnt = 0;
+        int32_t r, r_int;
+        I3G4250D_gyro_GetGyrIntZ(&r, &r_int);
+        if (absolute(r) < 1000000)
+            low_yaw_rate_cnt++;
+        else
+            low_yaw_rate_cnt = 0;
+        uint8_t is_stuck = (low_yaw_rate_cnt >= 10);
+
         /** State Transitions **/
-        if (orientation_reached())
+        if (orientation_reached() || is_stuck)
         {
-            // rover has rotated first 90°; no turn to target
+            low_yaw_rate_cnt = 0;
+
+            // rover has rotated first 90°; now turn to target
             int32_t orient = get_orientation_to_wp(driver_route[i_wp], current_chunk);
             orientation_ctrl_setpoint(orient, FWD);
             has_turned_180 = 1;
@@ -175,7 +188,8 @@ void driver_callback(int32_t dist[])
             (dfront_filtered < MIN_DIST_FRONT))                                          // wall is in the way
         {
             // target reached
-            forward(0);
+            if (mapping_active)
+                forward(0);
             has_turned_180 = 0;
             current_chunk[0] = driver_route[i_wp][0];
             current_chunk[1] = driver_route[i_wp][1];
@@ -197,6 +211,7 @@ void driver_callback(int32_t dist[])
         {
             if (i_wp == driver_routeLength)
             {
+                forward(0);
                 driv_state = IDLE; // finished route
                 PRINT_STATE("Idle\n\r");
             }
@@ -216,13 +231,20 @@ void driver_callback(int32_t dist[])
                     driv_state = ROTATING180;
                     PRINT_STATE("Rotating 180°\n\r");
                 }
-                else
+                else if (absolute(dPsi) > deg2rad1000(10))
                 {
                     // 90° turn needed
                     orientation_ctrl_setpoint(target_dir, FWD);
 
                     driv_state = ROTATING90;
                     PRINT_STATE("Rotating 90°\n\r");
+                }
+                else
+                {
+                    segment_start[0] = cur_pos[0];
+                    segment_start[1] = cur_pos[1];
+                    driv_state = DRIVING;
+                    PRINT_STATE("Driving\n\r");
                 }
             }
         }
@@ -307,13 +329,13 @@ void jcs2acs(uint8_t jcs[], uint8_t acs[])
 {
     // jakobs coordinate system to atsos coordinate systems
     acs[0] = jcs[1];
-    acs[1] = MAP_SIDE*2 - jcs[0];
+    acs[1] = MAP_SIDE * 2 - jcs[0];
 }
 
 void acs2jcs(uint8_t acs[], uint8_t jcs[])
 {
     // atsos coordinate system to jakobs coordinate systems
-    jcs[0] = MAP_SIDE*2 - acs[1];
+    jcs[0] = MAP_SIDE * 2 - acs[1];
     jcs[1] = acs[0];
 }
 

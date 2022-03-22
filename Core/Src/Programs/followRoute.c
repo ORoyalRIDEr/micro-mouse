@@ -37,13 +37,13 @@ void follow_route(uint8_t routeLength, int32_t speed)
         {6, 5}*/
         /*{2, 0},
         {0, 0}*/
-
-        {1, 0},
-        {0, 0}};
+        {6, 0},
+        {4, 0},
+        {6, 0}};
     // routeLength = 25;
-    routeLength = 2;
+    routeLength = 3;
 
-    drive_route(route, routeLength, speed);
+    drive_route((uint8_t*) route, routeLength, speed);
 }
 
 void drive_to_cell(uint8_t cell[], int32_t speed)
