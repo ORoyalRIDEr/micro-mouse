@@ -15,7 +15,7 @@
 #include <Ecl/orientation_ctrl.h>
 #include <Ecl/position_ctrl.h>
 
-volatile enum program {NONE, CPU, GO, STOP, TURN, POSITION_CTRL, DIST, MV_CELL, FOLLOW_ROUTE, STATE, HEADING, DRIVE, PARK, FOLLOW_L, FOLLOW_CURVE, ORIENT, SAMPLE_MAP, SAMPLE_ROUTE, MAP, W_WRITE, W_READ, POSITION, HEADING_2} 
+volatile enum program {NONE, CPU, GO, STOP, TURN, POSITION_CTRL, DIST, MV_CELL, MV_EXPL, FOLLOW_ROUTE, STATE, HEADING, DRIVE, PARK, FOLLOW_L, FOLLOW_CURVE, ORIENT, SAMPLE_MAP, SAMPLE_ROUTE, MAP, W_WRITE, W_READ, POSITION, HEADING_2} 
     program;
 int32_t arg_number = 0;
 int32_t arg_1 = 0;
@@ -67,6 +67,12 @@ void bt_callback(uint8_t argc, char* argv[])
         }
         else if (strcmp("cell", argv[1])) {
             program = MV_CELL;
+            arg_1 = atoi(argv[2]);
+            arg_2 = atoi(argv[3]);
+            arg_3 = atoi(argv[4]);
+        }
+        else if (strcmp("expl", argv[1])) {
+            program = MV_EXPL;
             arg_1 = atoi(argv[2]);
             arg_2 = atoi(argv[3]);
             arg_3 = atoi(argv[4]);
@@ -240,7 +246,15 @@ void commander(void)
             ctrl_set_mode(CTRL_ORIENTATION);
             ctrl_set_mode(CTRL_DRIVE);
             uint8_t cell[] = {arg_1, arg_2};
-            drive_to_cell(cell, arg_3);
+            drive_to_cell(cell, arg_3, 0);
+            program = NONE;
+            break;
+
+        case MV_EXPL:;
+            ctrl_set_mode(CTRL_ORIENTATION);
+            ctrl_set_mode(CTRL_DRIVE);
+            uint8_t cell2[] = {arg_1, arg_2};
+            drive_to_cell(cell2, arg_3, 1);
             program = NONE;
             break;
 

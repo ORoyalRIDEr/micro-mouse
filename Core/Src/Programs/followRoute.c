@@ -41,12 +41,12 @@ void follow_route(uint8_t routeLength, int32_t speed)
         {4, 0},
         {6, 0}};
     // routeLength = 25;
-    routeLength = 3;
+    routeLength = 2;
 
-    drive_route((uint8_t*) route, routeLength, speed);
+    drive_route((uint8_t*) route, routeLength, speed, 0);
 }
 
-void drive_to_cell(uint8_t cell[], int32_t speed)
+void drive_to_cell(uint8_t cell[], int32_t speed, uint8_t mapping_enable)
 {
     uint8_t pos[2];
     get_position(pos);
@@ -54,6 +54,6 @@ void drive_to_cell(uint8_t cell[], int32_t speed)
     if (path_length > 0)
     {
         uint8_t *route = get_route();
-        drive_route(route, path_length, speed);
+        drive_route(route, path_length, speed, mapping_enable);
     }
 }

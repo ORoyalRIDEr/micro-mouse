@@ -6,12 +6,12 @@
 enum driving_dir_t
 {
     N,
-    S,
     E,
+    S,
     W
 };
 
-void drive_route(uint8_t route[], uint8_t routeLength, int32_t speed);
+void drive_route(uint8_t route[], uint8_t routeLength, int32_t speed, uint8_t mapping_enable);
 
 void driver_callback(int32_t dist[]);
 

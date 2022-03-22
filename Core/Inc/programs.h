@@ -27,6 +27,6 @@ uint8_t* get_route(void);
 uint8_t path_to_cell(uint8_t goal_x, uint8_t goal_y, uint8_t origin_x, uint8_t origin_y);
 
 void follow_route(uint8_t routeLength, int32_t speed);
-void drive_to_cell(uint8_t cell[], int32_t speed);
+void drive_to_cell(uint8_t cell[], int32_t speed, uint8_t mapping_enable);
 
 #endif // PROGRAMS_H
