@@ -68,14 +68,32 @@ void write_wall(uint8_t x, uint8_t y, uint8_t wall_n, uint8_t wall_e, uint8_t wa
     map[cell_y+1][x] = wall_w;
 }
 
-void sample_map(void)
-{
-    for (int i = 0; i < MAP_SIDE*MAP_SIDE*2; i++) {
-        uint8_t row = i % MAP_SIDE;
-        uint8_t column = i % MAP_SIDE; 
-        map[row][column] = i%3;
+void sample_map(void){
+    uint8_t model[MAP_SIDE*2][MAP_SIDE+1] = {
+      {1,  1,  1,  1,  1,  1,  1,  1},
+    {1,  0,  1,  0,  1,  0,  0,  1},
+      {0,  0,  0,  0,  1,  0,  0,  0},
+    {1,  1,  0,  1,  0,  1,  1,  1},
+      {1,  0,  1,  1,  0,  0,  0,  0},
+    {1,  0,  0,  0,  1,  1,  1,  1},
+      {1,  1,  0,  1,  0,  1,  0,  0},
+    {1,  1,  1,  1,  1,  0,  0,  1},
+      {0,  0,  0,  0,  1,  1,  0,  0},
+    {1,  1,  1,  0,  1,  0,  0,  1},
+      {0,  0,  1,  1,  1,  0,  0,  0},
+    {1,  1,  0,  0,  0,  0,  1,  1},
+      {0,  1,  0,  0,  1,  1,  1,  0},
+    {1,  0,  0,  1,  0,  0,  0,  1},
+      {1,  1,  1,  1,  1,  1,  1,  0}
+   };
+    
+    for (int i = 0; i < MAP_SIDE*2+1; i++) {
+        for (int j = 0; j < MAP_SIDE; j++){
+            map[i][j] = model[i][j];
+        }
     }
 }
+
 
 void sample_route(void)
 {
