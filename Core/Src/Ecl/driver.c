@@ -18,9 +18,9 @@
 #define INV_K_FLW_WALL 100                    // ctrl gain for: wall distance error -> heading offset
 #define TARGET_DIST_THRESHOLD 100000          // um, minimum distance to target waypoint to switch to next one
 #define MIN_DIST_FRONT 110000                 // um, switch to next waypoint if wall is this distance in front of rover
-#define DIST_FRONT_NO_ODOMETRY 230000         // um, if the front distance is below this value, the wall is used for positioning and not odometry
+#define DIST_FRONT_NO_ODOMETRY 200000         // um, if the front distance is below this value, the wall is used for positioning and not odometry
 #define CHUNK_SIZE 200000
-#define DIST_TRAVELLED_BY_180TURN 10000
+#define DIST_TRAVELLED_BY_180TURN 12000
 #define N_WALLS_MAPPING 8        // number of walls that need to be seen for mapping
 #define MAPPING_THRESHOLD 150000 // um, if measurement is bigger than this value, no wall is assumed there
 

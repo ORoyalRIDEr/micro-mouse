@@ -10,12 +10,11 @@
 
 #include <Lib/cmath.h>
 
-
 void follow_route(uint8_t routeLength, int32_t speed)
 {
     // uint8_t *route[2] = get_route();
     set_chunk(0, 0);
-    I3G4250D_gyro_SetHeading(deg2rad1000(90)*1000);
+    I3G4250D_gyro_SetHeading(deg2rad1000(90) * 1000);
     uint8_t route[][2] = {
         {0, 0},
         {0, 1},
@@ -25,7 +24,42 @@ void follow_route(uint8_t routeLength, int32_t speed)
     // routeLength = 25;
     routeLength = 2;
 
-    drive_route((uint8_t*) route, routeLength, speed, 1, 0);
+    drive_route((uint8_t *)route, routeLength, speed, 1, 0);
+}
+
+void move_cell_rel(int8_t fwd, int8_t right, int32_t speed)
+{
+    uint8_t pos[2];
+    get_position(pos);
+    enum driving_dir_t cur_head = get_heading();
+
+    switch (cur_head)
+    {
+    case N:
+        pos[1] -= fwd;
+        pos[0] += right;
+        break;
+    case E:
+        pos[1] += right;
+        pos[0] += fwd;
+        break;
+    case S:
+        pos[1] += fwd;
+        pos[0] -= right;
+        break;
+    default:
+        pos[1] -= right;
+        pos[0] -= fwd;
+        break;
+    }
+
+    uint8_t tmp = pos[1];
+    pos[1] = pos[0];
+    pos[0] = tmp;
+
+    cprintf("Target: (%i,%i)\n\r", pos[0], pos[1]);
+
+    drive_to_cell(pos, speed, 1);
 }
 
 void drive_to_cell(uint8_t cell[], int32_t speed, uint8_t mapping_enable)

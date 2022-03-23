@@ -277,6 +277,7 @@ int16_t smallest_element_map(uint8_t a[MAP_SIDE][MAP_SIDE], enum cell_state_t ce
     int32_t minimum = 2*32-1;
     int16_t index = -1;
     int32_t value;
+
     enum cell_state_t state;
     for (uint8_t i = 0; i < MAP_SIDE; i++) {
         for (uint8_t j = 0; j < MAP_SIDE; j++)
@@ -284,7 +285,7 @@ int16_t smallest_element_map(uint8_t a[MAP_SIDE][MAP_SIDE], enum cell_state_t ce
             value = a[i][j];
             state = cell_states[i][j];
 
-            if ((value < minimum) && (state == OPEN)) {
+            if ((value <= minimum) && (state == OPEN)) {
                 minimum = value;
                 index = i*MAP_SIDE + j;
             }            
