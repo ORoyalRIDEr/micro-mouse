@@ -6,6 +6,8 @@
 #include <Ecl/position_ctrl.h>
 #include <Ecl/driver.h>
 
+
+
 void follow_route(uint8_t routeLength, int32_t speed)
 {
     // uint8_t *route[2] = get_route();
@@ -48,6 +50,8 @@ void follow_route(uint8_t routeLength, int32_t speed)
 
 void drive_to_cell(uint8_t cell[], int32_t speed, uint8_t mapping_enable)
 {
+    if (!mapping_enable)
+        load_true_map();
     uint8_t pos[2];
     get_position(pos);
     uint8_t path_length = path_to_cell(cell[1], cell[0], pos[0], pos[1]);

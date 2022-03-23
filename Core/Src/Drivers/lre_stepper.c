@@ -3,10 +3,12 @@
 #include <Lib/printf.h>
 
 #define ENGINE_MAX   100
+#define ENGINE_SLOPE 10
 
 enum stepper_side {STEP_LEFT, STEP_RIGHT};
 
-volatile int16_t engine_speed[] = {0,0};
+volatile int16_t engine_speed[] = {0,0};     // -1000 ... 1000
+volatile int16_t engine_speed_cmd[] = {0,0}; // -1000 ... 1000
 volatile int16_t odom_steps[] = {0,0};
 
 
@@ -132,19 +134,22 @@ void lre_stepper_setStep_side(uint8_t step, enum stepper_side side){
 
 void rotate(int16_t speed)
 {
-   int16_t fwd_speed = (engine_speed[0] + engine_speed[1]) / 2;
+   int16_t fwd_speed = (engine_speed_cmd[0] + engine_speed_cmd[1]) / 2 / ENGINE_SLOPE;
    int16_t spd0 = fwd_speed+speed;
    int16_t spd1 = fwd_speed-speed;
-   engine_speed[0] = spd0 > 100 ? 100 : (spd0 < -100 ? -100 : spd0);
-   engine_speed[1] = spd1 > 100 ? 100 : (spd1 < -100 ? -100 : spd1);
+   engine_speed_cmd[0] = spd0 > 100 ? 100 : (spd0 < -100 ? -100 : spd0);
+   engine_speed_cmd[1] = spd1 > 100 ? 100 : (spd1 < -100 ? -100 : spd1);
+
+   engine_speed_cmd[0] *= ENGINE_SLOPE;
+   engine_speed_cmd[1] *= ENGINE_SLOPE;
 
    //cprintf("turn %i\n\r", speed);
 } 
 
 void forward(int16_t speed)
 {
-   engine_speed[0] = speed;
-   engine_speed[1] = speed;
+   engine_speed_cmd[0] = speed * ENGINE_SLOPE;
+   engine_speed_cmd[1] = speed * ENGINE_SLOPE;
    //cprintf("fwd %i\n\r", speed);
 }
 
@@ -154,7 +159,14 @@ void engine_timer_callback()
    static int16_t ticks[] = {0, 0};
 
    for (uint8_t i=0; i<2; i++) {
-      ticks[i] += engine_speed[i];
+      // ramp engine_speed -> engine_speed_cmd
+      if (engine_speed[i] < engine_speed_cmd[i])
+         engine_speed[i]++;
+      else if (engine_speed[i] > engine_speed_cmd[i])
+         engine_speed[i] = engine_speed_cmd[i];
+
+      ticks[i] += engine_speed[i] / ENGINE_SLOPE;
+
       if (ticks[i] >= ENGINE_MAX) {
          ticks[i] -= ENGINE_MAX;
 

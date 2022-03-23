@@ -5,8 +5,8 @@
 #include <Drivers/lre_stepper.h>
 
 #define K_GAIN_INV 10
-#define MAX_TURN_RATE 40
-#define MAX_OFF_90 8 // maximum degree, the commanded signal can be different from a multiple of 90°
+#define MAX_TURN_RATE 50
+#define MAX_OFF_90 15 // maximum degree, the commanded signal can be different from a multiple of 90°
 
 int32_t orient_setpoint = 0;
 enum orient_mode_t orient_mode = REL;

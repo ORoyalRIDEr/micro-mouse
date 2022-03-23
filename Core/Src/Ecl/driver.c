@@ -11,16 +11,16 @@
 
 #include <programs.h>
 
-#define DRIVER_PHASE_THRESHOLD deg2rad1000(5) // rad*1000; minimum heading offset at which driving starts
+#define DRIVER_PHASE_THRESHOLD deg2rad1000(8) // rad*1000; minimum heading offset at which driving starts
 #define FLW_WALL_TARGET 50000                 // um; target distance for wall that is currently followed
 #define FLW_WALL_MIN_THRESHOLD 40000          // um, minimum distant, that wall is used to be followed
 #define FLW_WALL_MAX_THRESHOLD 90000          // um, maximum distant, that wall is used to be followed
 #define INV_K_FLW_WALL 100                    // ctrl gain for: wall distance error -> heading offset
-#define TARGET_DIST_THRESHOLD 110000          // um, minimum distance to target waypoint to switch to next one
+#define TARGET_DIST_THRESHOLD 100000          // um, minimum distance to target waypoint to switch to next one
 #define MIN_DIST_FRONT 110000                 // um, switch to next waypoint if wall is this distance in front of rover
 #define CHUNK_SIZE 200000
-#define DIST_TRAVELLED_BY_180TURN 85000
-#define N_WALLS_MAPPING 3        // number of walls that need to be seen for mapping
+#define DIST_TRAVELLED_BY_180TURN 10000
+#define N_WALLS_MAPPING 8        // number of walls that need to be seen for mapping
 #define MAPPING_THRESHOLD 150000 // um, if measurement is bigger than this value, no wall is assumed there
 
 #define PRINT_STATE(state) cprintf(state) // this can be used to turn off printing of current driver state
@@ -159,7 +159,7 @@ void driver_callback(int32_t dist[])
         // check if target reached
         static uint32_t dfront_filtered = 200000;
         if (dist[DIST_FRONT] < 800000) // broken measurements are usually very large; these are discarded
-            dfront_filtered = dfront_filtered * 3 / 4 + dist[DIST_FRONT] / 4;
+            dfront_filtered = dfront_filtered * 1 / 2 + dist[DIST_FRONT] / 2;
 
         uint8_t ind = 0; // index for direction vectors; N/S: 0, E/W: 1
         if (driving_dir == E || driving_dir == W)
@@ -262,6 +262,8 @@ void driver_callback(int32_t dist[])
                         uint8_t *route = get_route();
                         drive_route(route, path_length, driver_speed, mapping_active);
                     }
+
+                    print_map();
                 }
 
                 n_measurements = 0;

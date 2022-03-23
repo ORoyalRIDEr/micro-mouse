@@ -3,12 +3,36 @@
 #include <Lib/cmath.h>
 #include <Ecl/driver.h>
 
-uint8_t map[MAP_SIDE*2+1][MAP_SIDE+1] = {{2}};
 uint8_t route[MAP_SIDE*MAP_SIDE][2];
 enum cell_state_t {NONE, OPEN, CLOSED};
+uint8_t map[MAP_SIDE*2+1][MAP_SIDE+1];
+uint8_t true_map[][MAP_SIDE+1] = {
+     {1,  1,  1,  1,  1,  1,  1,  1,},
+    {1,  0,  1,  0,  1,  0,  0,  1},
+      {0,  0,  0,  0,  1,  0,  0,  0,},
+    {1,  1,  0,  1,  0,  1,  1,  1},
+      {1,  0,  1,  1,  0,  0,  0,  0,},
+    {1,  0,  0,  0,  1,  1,  1,  1},
+      {1,  1,  0,  1,  0,  1,  0,  0,},
+    {1,  1,  1,  1,  1,  0,  0,  1},
+      {0,  0,  0,  0,  1,  1,  0,  0,},
+    {1,  1,  1,  0,  1,  0,  0,  1},
+      {0,  0,  1,  1,  1,  0,  0,  0,},
+    {1,  1,  0,  0,  0,  0,  1,  1},
+      {0,  1,  0,  0,  1,  1,  1,  0,},
+    {1,  0,  0,  1,  0,  0,  0,  1},
+      {1,  1,  1,  1,  1,  1,  1,  0,},
+    };
 
 /* Returns the 1d index of the first instance of the smallest element in the array */
 int16_t smallest_element_map(uint8_t a[MAP_SIDE][MAP_SIDE], enum cell_state_t cell_states[MAP_SIDE][MAP_SIDE]);
+
+void load_true_map()
+{
+    for (uint8_t x=0; x<=MAP_SIDE; x++)
+        for (uint8_t y=0; y<=2*MAP_SIDE; y++)
+            map[y][x] = true_map[y][x];
+}
 
 void read_wall(uint8_t x, uint8_t y, uint8_t* walls)
 {
