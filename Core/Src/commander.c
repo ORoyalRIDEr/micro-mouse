@@ -9,6 +9,7 @@
 
 #include <Drivers/HCSR04.h>
 #include <Drivers/lre_stepper.h>
+#include <Drivers/I3G4250D_gyro.h>
 
 #include <Ecl/driver.h>
 #include <Ecl/state_estimator.h>
@@ -30,8 +31,17 @@ void bt_callback(uint8_t argc, char* argv[])
     char* str = argv[0];
 
     if (strcmp("tm", str)) {
-        
-        if (strcmp("ds", argv[1]))
+        if (strcmp("set", argv[1])) {
+            if (strcmp("hd", argv[2])) {
+                int32_t hd = atoi(argv[3])*PI1000*1000/180;
+                I3G4250D_gyro_SetHeading(hd);
+            }
+            else if (strcmp("ps", argv[2])) {
+                set_chunk((uint8_t) atoi(argv[4]), (uint8_t) atoi(argv[3]));
+            }
+            
+        }
+        else if (strcmp("ds", argv[1]))
             program = DIST;
         else if (strcmp("od", argv[1]))
             program = STATE;
@@ -236,23 +246,23 @@ void commander(void)
             break;
 
         case FOLLOW_ROUTE:;
-            ctrl_set_mode(CTRL_ORIENTATION);
-            ctrl_set_mode(CTRL_DRIVE);
             follow_route(3, arg_1);
+            ctrl_set_mode(CTRL_DRIVE);
+            ctrl_set_mode(CTRL_ORIENTATION);
             program = NONE;
             break;
 
         case MV_CELL:;
-            ctrl_set_mode(CTRL_ORIENTATION);
             ctrl_set_mode(CTRL_DRIVE);
+            ctrl_set_mode(CTRL_ORIENTATION);
             uint8_t cell[] = {arg_1, arg_2};
             drive_to_cell(cell, arg_3, 0);
             program = NONE;
             break;
 
         case MV_EXPL:;
-            ctrl_set_mode(CTRL_ORIENTATION);
             ctrl_set_mode(CTRL_DRIVE);
+            ctrl_set_mode(CTRL_ORIENTATION);
             uint8_t cell2[] = {arg_1, arg_2};
             drive_to_cell(cell2, arg_3, 1);
             program = NONE;

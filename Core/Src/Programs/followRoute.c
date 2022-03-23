@@ -6,46 +6,26 @@
 #include <Ecl/position_ctrl.h>
 #include <Ecl/driver.h>
 
+#include <Drivers/I3G4250D_gyro.h>
+
+#include <Lib/cmath.h>
 
 
 void follow_route(uint8_t routeLength, int32_t speed)
 {
     // uint8_t *route[2] = get_route();
+    set_chunk(0, 0);
+    I3G4250D_gyro_SetHeading(deg2rad1000(90)*1000);
     uint8_t route[][2] = {
-        /*{3, 0},
-        {3, 1},
-        {1, 1},
-        {1, 2},
-        {0, 2},
-        {0, 3},
-        {2, 3},
-        {2, 5},
-        {3, 5},
-        {3, 6},
-        {4, 6},
-        {4, 5},
-        {5, 5},
-        {5, 4},
-        {4, 4},
-        {4, 2},
-        {3, 2},
-        {3, 3},
-        {3, 2},
-        {4, 2},
-        {4, 4},
-        {5, 4},
-        {5, 6},
-        {6, 6},
-        {6, 5}*/
-        /*{2, 0},
-        {0, 0}*/
-        {6, 0},
-        {4, 0},
-        {6, 0}};
+        {0, 0},
+        {0, 1},
+        {2, 1},
+        {0, 1},
+        {0, 0}};
     // routeLength = 25;
     routeLength = 2;
 
-    drive_route((uint8_t*) route, routeLength, speed, 0);
+    drive_route((uint8_t*) route, routeLength, speed, 1, 0);
 }
 
 void drive_to_cell(uint8_t cell[], int32_t speed, uint8_t mapping_enable)
@@ -58,6 +38,6 @@ void drive_to_cell(uint8_t cell[], int32_t speed, uint8_t mapping_enable)
     if (path_length > 0)
     {
         uint8_t *route = get_route();
-        drive_route(route, path_length, speed, mapping_enable);
+        drive_route(route, path_length, speed, mapping_enable, 1);
     }
 }

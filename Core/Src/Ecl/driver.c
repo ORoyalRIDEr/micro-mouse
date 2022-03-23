@@ -18,6 +18,7 @@
 #define INV_K_FLW_WALL 100                    // ctrl gain for: wall distance error -> heading offset
 #define TARGET_DIST_THRESHOLD 100000          // um, minimum distance to target waypoint to switch to next one
 #define MIN_DIST_FRONT 110000                 // um, switch to next waypoint if wall is this distance in front of rover
+#define DIST_FRONT_NO_ODOMETRY 230000         // um, if the front distance is below this value, the wall is used for positioning and not odometry
 #define CHUNK_SIZE 200000
 #define DIST_TRAVELLED_BY_180TURN 10000
 #define N_WALLS_MAPPING 8        // number of walls that need to be seen for mapping
@@ -49,11 +50,12 @@ int32_t driver_speed;
 uint8_t i_wp = 0;
 uint8_t mapping_active = 0;
 uint8_t current_chunk[] = {0, 0};
+uint8_t driver_recalc_map = 0;
 
-void drive_route(uint8_t route[], uint8_t routeLength, int32_t speed, uint8_t mapping_enable)
+void drive_route(uint8_t route[], uint8_t routeLength, int32_t speed, uint8_t mapping_enable, uint8_t recalc_map)
 {
     // first waypoint needs to be current chunk
-    cprintf("Driving Route:\n\r");
+    cprintf("Driving Route\n\r");
     for (uint8_t i = 0; i < routeLength; i++)
     {
         acs2jcs(&(route[2 * i]), driver_route[i + 1]);
@@ -64,13 +66,33 @@ void drive_route(uint8_t route[], uint8_t routeLength, int32_t speed, uint8_t ma
         // cprintf("(%i, %i) -> ", (int)driver_route[i][0], (int)driver_route[i][1]);
         // cprintf("(%i, %i) -> ", (int)route[2*i], (int)route[2*i+1]);
     }
-    cprintf("\n\r");
+    // cprintf("\n\r");
 
     driver_routeLength = routeLength; // first chunk was added
     driver_speed = speed;
     i_wp = 1; // first wp is current chunk, so start with next one
 
     mapping_active = mapping_enable;
+    driver_recalc_map = recalc_map;
+
+    // find initial orientation
+    int32_t cur_pos[2], cur_V, cur_Psi;
+    get_state(cur_pos, &cur_V, &cur_Psi);
+    orientation_ctrl_setpoint(cur_Psi / 1000, REL);
+
+    int32_t dir90 = -deg2rad1000(180);
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        uint32_t diffabs = absolute(cur_Psi / 1000 - dir90);
+
+        if (diffabs <= deg2rad1000(45))
+        {
+            driving_dir = (i + 2) % 4; // sorry thats hard to understand
+            break;
+        }
+        dir90 += deg2rad1000(90);
+    }
+    cprintf("Initial dir: %i, hd: %i\n\r", driving_dir, cur_Psi);
 
     driv_state = MAPPING;
     PRINT_STATE("Mapping\n\r");
@@ -199,8 +221,8 @@ void driver_callback(int32_t dist[])
 
         /** State Transitions **/
         if (
-            ((dist_remaining <= TARGET_DIST_THRESHOLD) && (dfront_filtered > 200000)) || // required distance travelled
-            (dfront_filtered < MIN_DIST_FRONT))                                          // wall is in the way
+            ((dist_remaining <= TARGET_DIST_THRESHOLD) && (dfront_filtered > DIST_FRONT_NO_ODOMETRY)) || // required distance travelled
+            (dfront_filtered < MIN_DIST_FRONT))                                                          // wall is in the way
         {
             // target reached
             if (mapping_active)
@@ -252,19 +274,22 @@ void driver_callback(int32_t dist[])
                     mapping_finished = 1;
 
                     // plan new routes based on updated map
-                    uint8_t target[2] = {
-                        MAP_SIDE - driver_route[driver_routeLength - 1][0] - 1,
-                        driver_route[driver_routeLength - 1][1]};
-
-                    uint8_t path_length = path_to_cell(target[1], target[0], pos_acs[0], pos_acs[1]);
-                    if (path_length > 0)
+                    if (driver_recalc_map)
                     {
-                        uint8_t *route = get_route();
-                        drive_route(route, path_length, driver_speed, mapping_active);
-                    }
+                        uint8_t target[2] = {
+                            MAP_SIDE - driver_route[driver_routeLength - 1][0] - 1,
+                            driver_route[driver_routeLength - 1][1]};
 
-                    print_map();
+                        uint8_t path_length = path_to_cell(target[1], target[0], pos_acs[0], pos_acs[1]);
+                        if (path_length > 0)
+                        {
+                            uint8_t *route = get_route();
+                            drive_route(route, path_length, driver_speed, mapping_active, driver_recalc_map);
+                        }
+                    }
                 }
+
+                print_map();
 
                 n_measurements = 0;
                 for (uint8_t i = 0; i < 4; i++)
@@ -318,10 +343,6 @@ void driver_callback(int32_t dist[])
             }
         }
     }
-}
-
-void get_current_chunk(int32_t chunk_res)
-{
 }
 
 int32_t get_orientation_to_wp(uint8_t wp_chunk[], uint8_t current_chunk[])
@@ -417,4 +438,10 @@ void get_position(uint8_t pos[])
 enum driving_dir_t get_heading(void)
 {
     return driving_dir;
+}
+
+void set_chunk(uint8_t x, uint8_t y)
+{
+    current_chunk[0] = MAP_SIDE - x - 1;
+    current_chunk[1] = y;
 }

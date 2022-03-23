@@ -15,4 +15,6 @@ void I3G4250D_gyro_GetGyrIntZ (int32_t* r, int32_t* int_r);
 
 void I3G4250D_gyro_Calibrate(void);
 
+void I3G4250D_gyro_SetHeading(int32_t hd);
+
 #endif // I3G4250D_gyro

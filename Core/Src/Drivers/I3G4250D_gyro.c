@@ -106,3 +106,8 @@ void I3G4250D_gyro_Calibrate()
     bias_raw = bias_sum / I3G4250D_CALIBRATION_SAMPLES;
     int_yaw_rate = 0;
 }
+
+void I3G4250D_gyro_SetHeading(int32_t hd)
+{
+    int_yaw_rate = hd;
+}
